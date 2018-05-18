@@ -63,6 +63,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http, Version=4.1.1.2, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Net.Http.4.3.3\lib\net46\System.Net.Http.dll</HintPath>
@@ -118,6 +119,7 @@
     <Compile Include="CoverModels\FacilitatorCoverModel.cs" />
     <Compile Include="CoverModels\GiftCoverModel.cs" />
     <Compile Include="CoverModels\GiftElementCoverModel.cs" />
+    <Compile Include="CoverModels\MessageInfoCoverModel.cs" />
     <Compile Include="CoverModels\ReportCoverModel.cs" />
     <Compile Include="CoverModels\StorageCoverModel.cs" />
     <Compile Include="CoverModels\StorageElementCoverModel.cs" />
@@ -129,6 +131,7 @@
     <Compile Include="Interfaces\IGiftElementService.cs" />
     <Compile Include="Interfaces\ICustomerService.cs" />
     <Compile Include="Interfaces\IMainService.cs" />
+    <Compile Include="Interfaces\IMessageInfoService.cs" />
     <Compile Include="Interfaces\IReportService.cs" />
     <Compile Include="Interfaces\IStorageService.cs" />
     <Compile Include="Interfaces\IStorageElementService.cs" />
@@ -137,6 +140,7 @@
     <Compile Include="InventoryDB\FacilitatorServiceBD.cs" />
     <Compile Include="InventoryDB\GiftServiceBD.cs" />
     <Compile Include="InventoryDB\MainServiceBD.cs" />
+    <Compile Include="InventoryDB\MessageInfoServiceBD.cs" />
     <Compile Include="InventoryDB\ReportServiceBD.cs" />
     <Compile Include="InventoryDB\StorageServiceBD.cs" />
     <Compile Include="InventoryLIst\MainServiceList.cs" />
@@ -148,6 +152,14 @@
     <Compile Include="Migrations\201803221345598_FirstMigration.cs" />
     <Compile Include="Migrations\201803221345598_FirstMigration.Designer.cs">
       <DependentUpon>201803221345598_FirstMigration.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201805050527171_AddFieldInCustomer.cs" />
+    <Compile Include="Migrations\201805050527171_AddFieldInCustomer.Designer.cs">
+      <DependentUpon>201805050527171_AddFieldInCustomer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201805050558422_AddTableMessageInfo.cs" />
+    <Compile Include="Migrations\201805050558422_AddTableMessageInfo.Designer.cs">
+      <DependentUpon>201805050558422_AddTableMessageInfo.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -165,6 +177,7 @@
     <Compile Include="ViewModels\FacilitatorViewModel.cs" />
     <Compile Include="ViewModels\GiftViewModel.cs" />
     <Compile Include="ViewModels\GiftElementViewModel.cs" />
+    <Compile Include="ViewModels\MessageInfoViewModel.cs" />
     <Compile Include="ViewModels\StorageLoadViewModel.cs" />
     <Compile Include="ViewModels\StorageViewModel.cs" />
     <Compile Include="ViewModels\StorageElementViewModel.cs" />
@@ -183,6 +196,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201803221345598_FirstMigration.resx">
       <DependentUpon>201803221345598_FirstMigration.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201805050527171_AddFieldInCustomer.resx">
+      <DependentUpon>201805050527171_AddFieldInCustomer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201805050558422_AddTableMessageInfo.resx">
+      <DependentUpon>201805050558422_AddTableMessageInfo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
