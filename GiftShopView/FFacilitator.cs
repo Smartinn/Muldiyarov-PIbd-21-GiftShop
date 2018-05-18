@@ -33,19 +33,15 @@ namespace GiftShopView
             {
                 try
                 {
-                    var response = APIClient.GetRequest("api/Facilitator/Get/" + id.Value);
-                    if (response.Result.IsSuccessStatusCode)
-                    {
-                        var facilitator = APIClient.GetElement<FacilitatorViewModel>(response);
-                        textBoxFIO.Text = facilitator.FacilitatorFIO;
-                    }
-                    else
-                    {
-                        throw new Exception(APIClient.GetError(response));
-                    }
+                    var facilitator = Task.Run(() => APIClient.GetRequestData<FacilitatorViewModel>("api/Facilitator/Get/" + id.Value)).Result;
+                    textBoxFIO.Text = facilitator.FacilitatorFIO;
                 }
                 catch (Exception ex)
                 {
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -58,39 +54,37 @@ namespace GiftShopView
                 MessageBox.Show("Заполните ФИО", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            try
+            string fio = textBoxFIO.Text;
+            Task task;
+            if (id.HasValue)
             {
-                Task<HttpResponseMessage> response;
-                if (id.HasValue)
+                task = Task.Run(() => APIClient.PostRequestData("api/Facilitator/UpdElement", new FacilitatorCoverModel
                 {
-                    response = APIClient.PostRequest("api/Facilitator/UpdElement", new FacilitatorCoverModel
-                    {
-                        Id = id.Value,
-                        FacilitatorFIO = textBoxFIO.Text
-                    });
-                }
-                else
-                {
-                    response = APIClient.PostRequest("api/Facilitator/AddElement", new FacilitatorCoverModel
-                    {
-                        FacilitatorFIO = textBoxFIO.Text
-                    });
-                }
-                if (response.Result.IsSuccessStatusCode)
-                {
-                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                    Id = id.Value,
+                    FacilitatorFIO = fio
+                }));
             }
-            catch (Exception ex)
+            else
             {
+                task = Task.Run(() => APIClient.PostRequestData("api/Facilitator/AddElement", new FacilitatorCoverModel
+                {
+                    FacilitatorFIO = fio
+                }));
+            }
+
+            task.ContinueWith((prevTask) => MessageBox.Show("Сохранение прошло успешно. Обновите список", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                TaskContinuationOptions.OnlyOnRanToCompletion);
+            task.ContinueWith((prevTask) =>
+            {
+                var ex = (Exception)prevTask.Exception;
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+
+            Close();
         }
 
         private void Cancel_Click(object sender, EventArgs e)

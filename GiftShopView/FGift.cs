@@ -30,22 +30,18 @@ namespace GiftShopView
             {
                 try
                 {
-                    var response = APIClient.GetRequest("api/Gift/Get/" + id.Value);
-                    if (response.Result.IsSuccessStatusCode)
-                    {
-                        var product = APIClient.GetElement<GiftViewModel>(response);
-                        textBoxName.Text = product.GiftName;
-                        textBoxPrice.Text = product.Price.ToString();
-                        giftElements = product.GiftElements;
-                        LoadData();
-                    }
-                    else
-                    {
-                        throw new Exception(APIClient.GetError(response));
-                    }
+                    var product = Task.Run(() => APIClient.GetRequestData<GiftViewModel>("api/Gift/Get/" + id.Value)).Result;
+                    textBoxName.Text = product.GiftName;
+                    textBoxPrice.Text = product.Price.ToString();
+                    giftElements = product.GiftElements;
+                    LoadData();
                 }
                 catch (Exception ex)
                 {
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -147,54 +143,54 @@ namespace GiftShopView
                 MessageBox.Show("Заполните компоненты", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            try
+            List<GiftElementCoverModel> productComponentBM = new List<GiftElementCoverModel>();
+            for (int i = 0; i < giftElements.Count; ++i)
             {
-                List<GiftElementCoverModel> productComponentBM = new List<GiftElementCoverModel>();
-                for (int i = 0; i < giftElements.Count; ++i)
+                productComponentBM.Add(new GiftElementCoverModel
                 {
-                    productComponentBM.Add(new GiftElementCoverModel
-                    {
-                        Id = giftElements[i].Id,
-                        GiftId = giftElements[i].GiftId,
-                        ElementId = giftElements[i].ElementId,
-                        Count = giftElements[i].Count
-                    });
-                }
-                Task<HttpResponseMessage> response;
-                if (id.HasValue)
-                {
-                    response = APIClient.PostRequest("api/Gift/UpdElement", new GiftCoverModel
-                    {
-                        Id = id.Value,
-                        GiftName = textBoxName.Text,
-                        Price = Convert.ToInt32(textBoxPrice.Text),
-                        GiftElements = productComponentBM
-                    });
-                }
-                else
-                {
-                    response = APIClient.PostRequest("api/Gift/AddElement", new GiftCoverModel
-                    {
-                        GiftName = textBoxName.Text,
-                        Price = Convert.ToInt32(textBoxPrice.Text),
-                        GiftElements = productComponentBM
-                    });
-                }
-                if (response.Result.IsSuccessStatusCode)
-                {
-                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                    Id = giftElements[i].Id,
+                    GiftId = giftElements[i].GiftId,
+                    ElementId = giftElements[i].ElementId,
+                    Count = giftElements[i].Count
+                });
             }
-            catch (Exception ex)
+            string name = textBoxName.Text;
+            int price = Convert.ToInt32(textBoxPrice.Text);
+            Task task;
+            if (id.HasValue)
             {
+                task = Task.Run(() => APIClient.PostRequestData("api/Gift/UpdElement", new GiftCoverModel
+                {
+                    Id = id.Value,
+                    GiftName = name,
+                    Price = price,
+                    GiftElements = productComponentBM
+                }));
+            }
+            else
+            {
+                task = Task.Run(() => APIClient.PostRequestData("api/Gift/AddElement", new GiftCoverModel
+                {
+                    GiftName = name,
+                    Price = price,
+                    GiftElements = productComponentBM
+                }));
+            }
+
+            task.ContinueWith((prevTask) => MessageBox.Show("Сохранение прошло успешно. Обновите список", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                TaskContinuationOptions.OnlyOnRanToCompletion);
+            task.ContinueWith((prevTask) =>
+            {
+                var ex = (Exception)prevTask.Exception;
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+
+            Close();
+
         }
 
         private void Cancel_Click(object sender, EventArgs e)
