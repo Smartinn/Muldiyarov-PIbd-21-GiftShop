@@ -5,6 +5,7 @@ using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using GiftShop;
 using GiftShopModel;
+using System.Linq;
 
 namespace GiftShopService.InventoryLIst
 {
@@ -19,68 +20,32 @@ namespace GiftShopService.InventoryLIst
 
         public List<CustomViewModel> GetList()
         {
-            List<CustomViewModel> result = new List<CustomViewModel>();
-            for (int i = 0; i < source.Customs.Count; ++i)
-            {
-                string clientFIO = string.Empty;
-                for (int j = 0; j < source.Customers.Count; ++j)
+            List<CustomViewModel> result = source.Customs
+                .Select(rec => new CustomViewModel
                 {
-                    if (source.Customers[j].Id == source.Customs[i].CustomerId)
-                    {
-                        clientFIO = source.Customers[j].CustomerFIO;
-                        break;
-                    }
-                }
-                string productName = string.Empty;
-                for (int j = 0; j < source.Gifts.Count; ++j)
-                {
-                    if (source.Gifts[j].Id == source.Customs[i].GiftId)
-                    {
-                        productName = source.Gifts[j].GiftName;
-                        break;
-                    }
-                }
-                string implementerFIO = string.Empty;
-                if (source.Customs[i].FacilitatorId.HasValue)
-                {
-                    for (int j = 0; j < source.Facilitators.Count; ++j)
-                    {
-                        if (source.Facilitators[j].Id == source.Customs[i].FacilitatorId.Value)
-                        {
-                            implementerFIO = source.Facilitators[j].FacilitatorFIO;
-                            break;
-                        }
-                    }
-                }
-                result.Add(new CustomViewModel
-                {
-                    Id = source.Customs[i].Id,
-                    CustomerId = source.Customs[i].CustomerId,
-                    CustomerFIO = clientFIO,
-                    GiftId = source.Customs[i].GiftId,
-                    GiftName = productName,
-                    FacilitatorId = source.Customs[i].FacilitatorId,
-                    FacilitatorName = implementerFIO,
-                    Count = source.Customs[i].Count,
-                    Summa = source.Customs[i].Summa,
-                    DateCreate = source.Customs[i].DateCreate.ToLongDateString(),
-                    DateImplement = source.Customs[i].DateImplement?.ToLongDateString(),
-                    Status = source.Customs[i].Status.ToString()
-                });
-            }
+                    Id = rec.Id,
+                    CustomerId = rec.CustomerId,
+                    GiftId = rec.GiftId,
+                    FacilitatorId = rec.FacilitatorId,
+                    DateCreate = rec.DateCreate.ToLongDateString(),
+                    DateImplement = rec.DateImplement?.ToLongDateString(),
+                    Status = rec.Status.ToString(),
+                    Count = rec.Count,
+                    Summa = rec.Summa,
+                    CustomerFIO = source.Customers
+                                    .FirstOrDefault(recC => recC.Id == rec.CustomerId)?.CustomerFIO,
+                    GiftName = source.Gifts
+                                    .FirstOrDefault(recP => recP.Id == rec.GiftId)?.GiftName,
+                    FacilitatorName = source.Facilitators
+                                    .FirstOrDefault(recI => recI.Id == rec.FacilitatorId)?.FacilitatorFIO
+                })
+                .ToList();
             return result;
         }
 
         public void CreateCustom(CustomCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Customs.Count; ++i)
-            {
-                if (source.Customs[i].Id > maxId)
-                {
-                    maxId = source.Customers[i].Id;
-                }
-            }
+            int maxId = source.Customs.Count > 0 ? source.Customs.Max(rec => rec.Id) : 0;
             source.Customs.Add(new Custom
             {
                 Id = maxId + 1,
@@ -95,131 +60,90 @@ namespace GiftShopService.InventoryLIst
 
         public void TakeCustom(CustomCoverModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Customs.Count; ++i)
-            {
-                if (source.Customs[i].Id == model.Id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Custom element = source.Customs.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            for (int i = 0; i < source.GiftElements.Count; ++i)
+            var giftElements = source.GiftElements.Where(rec => rec.GiftId == element.GiftId);
+            foreach (var giftElement in giftElements)
             {
-                if (source.GiftElements[i].GiftId == source.Customs[index].GiftId)
+                int countOnStorages = source.StoragesElement
+                                            .Where(rec => rec.ElementId == giftElement.ElementId)
+                                            .Sum(rec => rec.Count);
+                if (countOnStorages < giftElement.Count*element.Count)
                 {
-                    int countOnStocks = 0;
-                    for (int j = 0; j < source.StoragesElement.Count; ++j)
+                    var componentName = source.Elements
+                                    .FirstOrDefault(rec => rec.Id == giftElement.ElementId);
+                    throw new Exception("Не достаточно компонента " + componentName?.ElementName +
+                        " требуется " + giftElement.Count * element.Count + ", в наличии " + countOnStorages);
+                }
+            }
+            foreach (var giftElement in giftElements)
+            {
+                int countOnStorages = giftElement.Count * element.Count;
+                var storagesElement = source.StoragesElement
+                                            .Where(rec => rec.ElementId == giftElement.ElementId);
+                foreach (var storageElement in storagesElement)
+                {
+                    if (storageElement.Count >= countOnStorages)
                     {
-                        if (source.StoragesElement[j].ElementId == source.GiftElements[i].ElementId)
-                        {
-                            countOnStocks += source.StoragesElement[j].Count;
-                        }
+                        storageElement.Count -= countOnStorages;
+                        break;
                     }
-                    if (countOnStocks < source.GiftElements[i].Count)
+                    else
                     {
-                        for (int j = 0; j < source.Elements.Count; ++j)
-                        {
-                            if (source.Elements[j].Id == source.GiftElements[i].GiftId)
-                            {
-                                throw new Exception("Не достаточно компонента " + source.Elements[j].ElementName +
-                                    " требуется " + source.GiftElements[i].Count + ", в наличии " + countOnStocks);
-                            }
-                        }
+                        countOnStorages -= storageElement.Count;
+                        storageElement.Count = 0;
                     }
                 }
             }
-            for (int i = 0; i < source.GiftElements.Count; ++i)
-            {
-                if (source.GiftElements[i].GiftId == source.Customs[index].GiftId)
-                {
-                    int countOnStocks = source.GiftElements[i].Count * source.Customs[index].Count;
-                    for (int j = 0; j < source.StoragesElement.Count; ++j)
-                    {
-                        if (source.StoragesElement[j].ElementId == source.GiftElements[i].ElementId)
-                        {
-                            if (source.StoragesElement[j].Count >= countOnStocks)
-                            {
-                                source.StoragesElement[j].Count -= countOnStocks;
-                                break;
-                            }
-                            else
-                            {
-                                countOnStocks -= source.StoragesElement[j].Count;
-                                source.StoragesElement[j].Count = 0;
-                            }
-                        }
-                    }
-                }
-            }
-            source.Customs[index].FacilitatorId = model.FacilitatorId;
-            source.Customs[index].DateImplement = DateTime.Now;
-            source.Customs[index].Status = CustomStatus.Выполняется;
+            element.FacilitatorId = model.FacilitatorId;
+            element.DateImplement = DateTime.Now;
+            element.Status = CustomStatus.Выполняется;
+            
         }
 
         public void FinishCustom(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Customs.Count; ++i)
-            {
-                if (source.Customers[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Custom element = source.Customs.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Customs[index].Status = CustomStatus.Готов;
+            element.Status = CustomStatus.Готов;
         }
 
         public void PayCustom(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Customs.Count; ++i)
-            {
-                if (source.Customers[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Custom element = source.Customs.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Customs[index].Status = CustomStatus.Оплачен;
+            element.Status = CustomStatus.Оплачен;
         }
 
         public void PutElementInStorage(StorageElementCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.StoragesElement.Count; ++i)
+            StorageElement element = source.StoragesElement
+                                                .FirstOrDefault(rec => rec.StorageId == model.StorageId &&
+                                                                    rec.ElementId == model.ElementId);
+            if (element != null)
             {
-                if (source.StoragesElement[i].StorageId == model.StorageId &&
-                    source.StoragesElement[i].ElementId == model.ElementId)
-                {
-                    source.StoragesElement[i].Count += model.Count;
-                    return;
-                }
-                if (source.StoragesElement[i].Id > maxId)
-                {
-                    maxId = source.StoragesElement[i].Id;
-                }
+                element.Count += model.Count;
             }
-            source.StoragesElement.Add(new StorageElement
+            else
             {
-                Id = ++maxId,
-                StorageId = model.StorageId,
-                ElementId = model.ElementId,
-                Count = model.Count
-            });
+                int maxId = source.StoragesElement.Count > 0 ? source.StoragesElement.Max(rec => rec.Id) : 0;
+                source.StoragesElement.Add(new StorageElement
+                {
+                    Id = ++maxId,
+                    StorageId = model.StorageId,
+                    ElementId = model.ElementId,
+                    Count = model.Count
+                });
+            }
         }
     }
 }

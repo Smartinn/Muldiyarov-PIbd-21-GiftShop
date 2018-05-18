@@ -5,6 +5,7 @@ using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using GiftShop;
 using GiftShopModel;
+using System.Linq;
 
 namespace GiftShopService.InventoryLIst
 {
@@ -19,98 +20,62 @@ namespace GiftShopService.InventoryLIst
 
         public List<StorageViewModel> GetList()
         {
-            List<StorageViewModel> result = new List<StorageViewModel>();
-            for (int i = 0; i < source.Storages.Count; ++i)
-            {
-                List<StorageElementViewModel> StorageElements = new List<StorageElementViewModel>();
-                for (int j = 0; j < source.StoragesElement.Count; ++j)
+            List<StorageViewModel> result = source.Storages
+                .Select(rec => new StorageViewModel
                 {
-                    if (source.StoragesElement[j].StorageId == source.Storages[i].Id)
-                    {
-                        string elementName = string.Empty;
-                        for (int k = 0; k < source.Elements.Count; ++k)
-                        {
-                            if (source.GiftElements[j].ElementId == source.Elements[k].Id)
+                    Id = rec.Id,
+                    StorageName = rec.StorageName,
+                    StorageElements = source.StoragesElement
+                            .Where(recPC => recPC.StorageId == rec.Id)
+                            .Select(recPC => new StorageElementViewModel
                             {
-                                elementName = source.Elements[k].ElementName;
-                                break;
-                            }
-                        }
-                        StorageElements.Add(new StorageElementViewModel
-                        {
-                            Id = source.StoragesElement[j].Id,
-                            StorageId = source.StoragesElement[j].StorageId,
-                            ElementId = source.StoragesElement[j].ElementId,
-                            ElementName = elementName,
-                            Count = source.StoragesElement[j].Count
-                        });
-                    }
-                }
-                result.Add(new StorageViewModel
-                {
-                    Id = source.Storages[i].Id,
-                    StorageName = source.Storages[i].StorageName,
-                    StorageElements = StorageElements
-                });
-            }
+                                Id = recPC.Id,
+                                StorageId = recPC.StorageId,
+                                ElementId = recPC.ElementId,
+                                ElementName = source.Elements
+                                    .FirstOrDefault(recC => recC.Id == recPC.ElementId)?.ElementName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public StorageViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Storages.Count; ++i)
+            Storage element = source.Storages.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                List<StorageElementViewModel> StorageElements = new List<StorageElementViewModel>();
-                for (int j = 0; j < source.StoragesElement.Count; ++j)
+                return new StorageViewModel
                 {
-                    if (source.StoragesElement[j].StorageId == source.Storages[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Elements.Count; ++k)
-                        {
-                            if (source.GiftElements[j].ElementId == source.Elements[k].Id)
+                    Id = element.Id,
+                    StorageName = element.StorageName,
+                    StorageElements = source.StoragesElement
+                            .Where(recPC => recPC.StorageId == element.Id)
+                            .Select(recPC => new StorageElementViewModel
                             {
-                                componentName = source.Elements[k].ElementName;
-                                break;
-                            }
-                        }
-                        StorageElements.Add(new StorageElementViewModel
-                        {
-                            Id = source.StoragesElement[j].Id,
-                            StorageId = source.StoragesElement[j].StorageId,
-                            ElementId = source.StoragesElement[j].ElementId,
-                            ElementName = componentName,
-                            Count = source.StoragesElement[j].Count
-                        });
-                    }
-                }
-                if (source.Storages[i].Id == id)
-                {
-                    return new StorageViewModel
-                    {
-                        Id = source.Storages[i].Id,
-                        StorageName = source.Storages[i].StorageName,
-                        StorageElements = StorageElements
-                    };
-                }
+                                Id = recPC.Id,
+                                StorageId = recPC.StorageId,
+                                ElementId = recPC.ElementId,
+                                ElementName = source.Elements
+                                    .FirstOrDefault(recC => recC.Id == recPC.ElementId)?.ElementName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(StorageCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Storages.Count; ++i)
+            Storage element = source.Storages.FirstOrDefault(rec => rec.StorageName == model.StorageName);
+            if (element != null)
             {
-                if (source.Storages[i].Id > maxId)
-                {
-                    maxId = source.Storages[i].Id;
-                }
-                if (source.Storages[i].StorageName == model.StorageName)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
+            int maxId = source.Storages.Count > 0 ? source.Storages.Max(rec => rec.Id) : 0;
             source.Storages.Add(new Storage
             {
                 Id = maxId + 1,
@@ -120,44 +85,32 @@ namespace GiftShopService.InventoryLIst
 
         public void UpdElement(StorageCoverModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Storages.Count; ++i)
+            Storage element = source.Storages.FirstOrDefault(rec =>
+                                        rec.StorageName == model.StorageName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Storages[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Storages[i].StorageName == model.StorageName &&
-                    source.Storages[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
-            if (index == -1)
+            element = source.Storages.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Storages[index].StorageName = model.StorageName;
+            element.StorageName = model.StorageName;
         }
 
         public void DelElement(int id)
         {
-            for (int i = 0; i < source.StoragesElement.Count; ++i)
+            Storage element = source.Storages.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.StoragesElement[i].StorageId == id)
-                {
-                    source.StoragesElement.RemoveAt(i--);
-                }
+                source.StoragesElement.RemoveAll(rec => rec.StorageId == id);
+                source.Storages.Remove(element);
             }
-            for (int i = 0; i < source.Storages.Count; ++i)
+            else
             {
-                if (source.Storages[i].Id == id)
-                {
-                    source.Storages.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
     }
 }
