@@ -1,4 +1,5 @@
 ﻿
+using GiftShopService.CoverModels;
 using GiftShopService.Interfaces;
 using GiftShopService.ViewModels;
 using System;
@@ -16,10 +17,14 @@ namespace GiftShopView
 
         private readonly IMainService service;
 
-        public FMain(IMainService service)
+        private readonly IReportService reportService;
+
+        public FMain(IMainService service, IReportService reportService)
         {
             InitializeComponent();
             this.service = service;
+            this.reportService = reportService;
+            LoadData();
         }
 
         private void LoadData()
@@ -135,6 +140,41 @@ namespace GiftShopView
         private void Upd_Click(object sender, EventArgs e)
         {
                 LoadData();
+        }
+
+        private void прайсToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                Filter = "doc|*.doc|docx|*.docx"
+            };
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    reportService.SaveGiftPrice(new ReportCoverModel
+                    {
+                        FileName = sfd.FileName
+                    });
+                    MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void загруженностьСкладовToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Container.Resolve<FStorageLoad>();
+            form.ShowDialog();
+        }
+
+        private void заказыКлиентовToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Container.Resolve<FCustomerCustoms>();
+            form.ShowDialog();
         }
     }
 }

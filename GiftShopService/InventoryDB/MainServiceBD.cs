@@ -100,7 +100,7 @@ namespace GiftShopService.InventoryDB
                         {
                             throw new Exception("Не достаточно компонента " +
                                 giftComponent.Element.ElementName + " требуется " +
-                                giftComponent.Count + ", не хватает " + countOnStocks);
+                                giftComponent.Count * element.Count + ", не хватает " + countOnStocks);
                         }
                     }
                     element.FacilitatorId = model.FacilitatorId;
