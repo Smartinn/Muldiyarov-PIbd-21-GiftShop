@@ -1,8 +1,6 @@
-﻿
-using GiftShopService;
+﻿using GiftShopService;
 using GiftShopService.Interfaces;
 using GiftShopService.InventoryDB;
-using GiftShopService.InventoryLIst;
 using System;
 using System.Data.Entity;
 using System.Windows.Forms;
@@ -35,6 +33,7 @@ namespace GiftShopView
             currentContainer.RegisterType<IGiftService, GiftServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IStorageService, StorageServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IMainService, MainServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IReportService, ReportServiceBD>(new HierarchicalLifetimeManager());
             return currentContainer;
         }
     }

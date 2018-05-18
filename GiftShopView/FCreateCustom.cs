@@ -64,7 +64,7 @@ namespace GiftShopView
                     int id = Convert.ToInt32(comboBoxGift.SelectedValue);
                     GiftViewModel gift = serviceG.GetElement(id);
                     int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * gift.Price).ToString();
+                    textBoxSum.Text = (count * (int)gift.Price).ToString();
                 }
                 catch (Exception ex)
                 {
