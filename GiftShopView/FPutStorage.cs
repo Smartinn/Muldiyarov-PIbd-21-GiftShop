@@ -26,41 +26,30 @@ namespace GiftShopView
         {
             try
             {
-                var responseC = APIClient.GetRequest("api/Element/GetList");
-                if (responseC.Result.IsSuccessStatusCode)
+                List<ElementViewModel> listC = Task.Run(() => APIClient.GetRequestData<List<ElementViewModel>>("api/Element/GetList")).Result;
+                if (listC != null)
                 {
-                    List<ElementViewModel> list = APIClient.GetElement<List<ElementViewModel>>(responseC);
-                    if (list != null)
-                    {
-                        comboBoxElement.DisplayMember = "ElementName";
-                        comboBoxElement.ValueMember = "Id";
-                        comboBoxElement.DataSource = list;
-                        comboBoxElement.SelectedItem = null;
-                    }
+                    comboBoxElement.DisplayMember = "ElementName";
+                    comboBoxElement.ValueMember = "Id";
+                    comboBoxElement.DataSource = listC;
+                    comboBoxElement.SelectedItem = null;
                 }
-                else
+
+                List<StorageViewModel> listS = Task.Run(() => APIClient.GetRequestData<List<StorageViewModel>>("api/Storage/GetList")).Result;
+                if (listS != null)
                 {
-                    throw new Exception(APIClient.GetError(responseC));
-                }
-                var responseS = APIClient.GetRequest("api/Storage/GetList");
-                if (responseS.Result.IsSuccessStatusCode)
-                {
-                    List<StorageViewModel> list = APIClient.GetElement<List<StorageViewModel>>(responseS);
-                    if (list != null)
-                    {
-                        comboBoxStorage.DisplayMember = "StorageName";
-                        comboBoxStorage.ValueMember = "Id";
-                        comboBoxStorage.DataSource = list;
-                        comboBoxStorage.SelectedItem = null;
-                    }
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(responseC));
+                    comboBoxStorage.DisplayMember = "StorageName";
+                    comboBoxStorage.ValueMember = "Id";
+                    comboBoxStorage.DataSource = listS;
+                    comboBoxStorage.SelectedItem = null;
                 }
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -84,32 +73,43 @@ namespace GiftShopView
             }
             try
             {
-                var response = APIClient.PostRequest("api/Main/PutElementInStorage", new StorageElementCoverModel
+                int ElementId = Convert.ToInt32(comboBoxElement.SelectedValue);
+                int StorageId = Convert.ToInt32(comboBoxStorage.SelectedValue);
+                int Count = Convert.ToInt32(textBoxCount.Text);
+                Task task = Task.Run(() => APIClient.PostRequestData("api/Main/PutElementInStorage", new StorageElementCoverModel
                 {
-                    ElementId = Convert.ToInt32(comboBoxElement.SelectedValue),
-                    StorageId = Convert.ToInt32(comboBoxStorage.SelectedValue),
-                    Count = Convert.ToInt32(textBoxCount.Text)
-                });
-                if (response.Result.IsSuccessStatusCode)
+                    ElementId = ElementId,
+                    StorageId = StorageId,
+                    Count = Count
+                }));
+
+                task.ContinueWith((prevTask) => MessageBox.Show("Склад пополнен", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                    TaskContinuationOptions.OnlyOnRanToCompletion);
+                task.ContinueWith((prevTask) =>
                 {
-                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                    var ex = (Exception)prevTask.Exception;
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }, TaskContinuationOptions.OnlyOnFaulted);
+
+                Close();
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
         }
 
         private void Cancel_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.Cancel;
             Close();
         }
     }

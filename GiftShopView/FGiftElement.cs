@@ -30,21 +30,17 @@ namespace GiftShopView
         {
             try
             {
-                var response = APIClient.GetRequest("api/Element/GetList");
-                if (response.Result.IsSuccessStatusCode)
-                {
-                    comboBoxElement.DisplayMember = "ElementName";
-                    comboBoxElement.ValueMember = "Id";
-                    comboBoxElement.DataSource = APIClient.GetElement<List<ElementViewModel>>(response);
-                    comboBoxElement.SelectedItem = null;
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                comboBoxElement.DisplayMember = "ElementName";
+                comboBoxElement.ValueMember = "Id";
+                comboBoxElement.DataSource = Task.Run(() => APIClient.GetRequestData<List<ElementViewModel>>("api/Element/GetList")).Result;
+                comboBoxElement.SelectedItem = null;
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             if (model != null)
