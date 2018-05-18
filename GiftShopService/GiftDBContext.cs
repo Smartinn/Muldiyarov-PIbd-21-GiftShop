@@ -4,10 +4,9 @@ using System.Data.Entity;
 
 namespace GiftShopService
 {
-    [Table("GiftDatabase")]
     public class GiftDBContext : DbContext
     {
-        public GiftDBContext()
+        public GiftDBContext() : base("GiftDatabase")
         {
             Configuration.ProxyCreationEnabled = false;
             Configuration.LazyLoadingEnabled = false;

@@ -3,6 +3,8 @@ using GiftShopService.Interfaces;
 using GiftShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Unity;
 using Unity.Attributes;
@@ -11,21 +13,15 @@ namespace GiftShopView
 {
     public partial class FGift : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IGiftService service;
 
         private int? id;
 
         private List<GiftElementViewModel> giftElements;
 
-        public FGift(IGiftService service)
+        public FGift()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FGift_Load(object sender, EventArgs e)
@@ -34,13 +30,18 @@ namespace GiftShopView
             {
                 try
                 {
-                    GiftViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Gift/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.GiftName;
-                        textBoxPrice.Text = view.Price.ToString();
-                        giftElements = view.GiftElements;
+                        var product = APIClient.GetElement<GiftViewModel>(response);
+                        textBoxName.Text = product.GiftName;
+                        textBoxPrice.Text = product.Price.ToString();
+                        giftElements = product.GiftElements;
                         LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -76,7 +77,7 @@ namespace GiftShopView
 
         private void Add_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FGiftElement>();
+            var form = new FGiftElement();
             if (form.ShowDialog() == DialogResult.OK)
             {
                 if (form.Model != null)
@@ -95,7 +96,7 @@ namespace GiftShopView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<FGiftElement>();
+                var form = new FGiftElement();
                 form.Model = giftElements[dataGridView.SelectedRows[0].Cells[0].RowIndex];
                 if (form.ShowDialog() == DialogResult.OK)
                 {
@@ -159,9 +160,10 @@ namespace GiftShopView
                         Count = giftElements[i].Count
                     });
                 }
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new GiftCoverModel
+                    response = APIClient.PostRequest("api/Gift/UpdElement", new GiftCoverModel
                     {
                         Id = id.Value,
                         GiftName = textBoxName.Text,
@@ -171,16 +173,23 @@ namespace GiftShopView
                 }
                 else
                 {
-                    service.AddElement(new GiftCoverModel
+                    response = APIClient.PostRequest("api/Gift/AddElement", new GiftCoverModel
                     {
                         GiftName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
                         GiftElements = productComponentBM
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

@@ -17,42 +17,46 @@ namespace GiftShopView
 {
     public partial class FPutStorage : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IStorageService serviceS;
-
-        private readonly IElementService serviceE;
-
-        private readonly IMainService serviceM;
-
-        public FPutStorage(IStorageService serviceS, IElementService serviceE, IMainService serviceM)
+        public FPutStorage()
         {
             InitializeComponent();
-            this.serviceS = serviceS;
-            this.serviceE = serviceE;
-            this.serviceM = serviceM;
         }
 
         private void FPutStorage_Load(object sender, EventArgs e)
         {
             try
             {
-                List<ElementViewModel> listC = serviceE.GetList();
-                if (listC != null)
+                var responseC = APIClient.GetRequest("api/Element/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxElement.DisplayMember = "ElementName";
-                    comboBoxElement.ValueMember = "Id";
-                    comboBoxElement.DataSource = listC;
-                    comboBoxElement.SelectedItem = null;
+                    List<ElementViewModel> list = APIClient.GetElement<List<ElementViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxElement.DisplayMember = "ElementName";
+                        comboBoxElement.ValueMember = "Id";
+                        comboBoxElement.DataSource = list;
+                        comboBoxElement.SelectedItem = null;
+                    }
                 }
-                List<StorageViewModel> listS = serviceS.GetList();
-                if (listS != null)
+                else
                 {
-                    comboBoxStorage.DisplayMember = "StorageName";
-                    comboBoxStorage.ValueMember = "Id";
-                    comboBoxStorage.DataSource = listS;
-                    comboBoxStorage.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
+                }
+                var responseS = APIClient.GetRequest("api/Storage/GetList");
+                if (responseS.Result.IsSuccessStatusCode)
+                {
+                    List<StorageViewModel> list = APIClient.GetElement<List<StorageViewModel>>(responseS);
+                    if (list != null)
+                    {
+                        comboBoxStorage.DisplayMember = "StorageName";
+                        comboBoxStorage.ValueMember = "Id";
+                        comboBoxStorage.DataSource = list;
+                        comboBoxStorage.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseC));
                 }
             }
             catch (Exception ex)
@@ -80,15 +84,22 @@ namespace GiftShopView
             }
             try
             {
-                serviceM.PutElementInStorage(new StorageElementCoverModel
+                var response = APIClient.PostRequest("api/Main/PutElementInStorage", new StorageElementCoverModel
                 {
                     ElementId = Convert.ToInt32(comboBoxElement.SelectedValue),
                     StorageId = Convert.ToInt32(comboBoxStorage.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

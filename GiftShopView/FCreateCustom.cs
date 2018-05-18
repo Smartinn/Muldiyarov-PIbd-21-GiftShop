@@ -11,42 +11,46 @@ namespace GiftShopView
 {
     public partial class FCreateCustom : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly ICustomerService serviceC;
-
-        private readonly IGiftService serviceG;
-
-        private readonly IMainService serviceM;
-
-        public FCreateCustom(ICustomerService serviceC, IGiftService serviceG, IMainService serviceM)
+        public FCreateCustom()
         {
             InitializeComponent();
-            this.serviceC = serviceC;
-            this.serviceG = serviceG;
-            this.serviceM = serviceM;
         }
 
         private void FCreateCustom_Load(object sender, EventArgs e)
         {
             try
             {
-                List<CustomerViewModel> listC = serviceC.GetList();
-                if (listC != null)
+                var responseC = APIClient.GetRequest("api/Customer/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxCustomer.DisplayMember = "CustomerFIO";
-                    comboBoxCustomer.ValueMember = "Id";
-                    comboBoxCustomer.DataSource = listC;
-                    comboBoxCustomer.SelectedItem = null;
+                List<CustomerViewModel> list = APIClient.GetElement<List<CustomerViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxCustomer.DisplayMember = "CustomerFIO";
+                        comboBoxCustomer.ValueMember = "Id";
+                        comboBoxCustomer.DataSource = list;
+                        comboBoxCustomer.SelectedItem = null;
+                    }
                 }
-                List<GiftViewModel> listP = serviceG.GetList();
-                if (listP != null)
+                else
                 {
-                    comboBoxGift.DisplayMember = "GiftName";
-                    comboBoxGift.ValueMember = "Id";
-                    comboBoxGift.DataSource = listP;
-                    comboBoxGift.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
+                }
+                var responseP = APIClient.GetRequest("api/Gift/GetList");
+                if (responseP.Result.IsSuccessStatusCode)
+                {
+                    List<GiftViewModel> list = APIClient.GetElement<List<GiftViewModel>>(responseP);
+                    if (list != null)
+                    {
+                        comboBoxGift.DisplayMember = "GiftName";
+                        comboBoxGift.ValueMember = "Id";
+                        comboBoxGift.DataSource = list;
+                        comboBoxGift.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseP));
                 }
             }
             catch (Exception ex)
@@ -62,9 +66,17 @@ namespace GiftShopView
                 try
                 {
                     int id = Convert.ToInt32(comboBoxGift.SelectedValue);
-                    GiftViewModel gift = serviceG.GetElement(id);
-                    int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * (int)gift.Price).ToString();
+                    var responseP = APIClient.GetRequest("api/Gift/Get/" + id);
+                    if (responseP.Result.IsSuccessStatusCode)
+                    {
+                        GiftViewModel product = APIClient.GetElement<GiftViewModel>(responseP);
+                        int count = Convert.ToInt32(textBoxCount.Text);
+                        textBoxSum.Text = (count * (int)product.Price).ToString();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(responseP));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -102,16 +114,23 @@ namespace GiftShopView
             }
             try
             {
-                serviceM.CreateCustom(new CustomCoverModel
+                var response = APIClient.PostRequest("api/Main/CreateCustom", new CustomCoverModel
                 {
                     CustomerId = Convert.ToInt32(comboBoxCustomer.SelectedValue),
                     GiftId = Convert.ToInt32(comboBoxGift.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text),
                     Summa = Convert.ToInt32(textBoxSum.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

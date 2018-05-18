@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.Serialization;
 
 namespace GiftShopService.ViewModels
 {
+    [DataContract]
     public class FacilitatorViewModel
     {
+        [DataMember]
         public int Id { get; set; }
-
+        [DataMember]
         public string FacilitatorFIO { get; set; }
     }
 }

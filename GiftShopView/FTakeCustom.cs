@@ -11,22 +11,13 @@ namespace GiftShopView
 {
     public partial class FTakeCustom : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IFacilitatorService serviceI;
-
-        private readonly IMainService serviceM;
 
         private int? id;
 
-        public FTakeCustom(IFacilitatorService serviceI, IMainService serviceM)
+        public FTakeCustom()
         {
             InitializeComponent();
-            this.serviceI = serviceI;
-            this.serviceM = serviceM;
         }
 
         private void FTakeCustom_Load(object sender, EventArgs e)
@@ -38,13 +29,21 @@ namespace GiftShopView
                     MessageBox.Show("Не указан заказ", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Close();
                 }
-                List<FacilitatorViewModel> listI = serviceI.GetList();
-                if (listI != null)
+                var response = APIClient.GetRequest("api/Facilitator/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    comboBoxFacilitator.DisplayMember = "FacilitatorFIO";
-                    comboBoxFacilitator.ValueMember = "Id";
-                    comboBoxFacilitator.DataSource = listI;
-                    comboBoxFacilitator.SelectedItem = null;
+                    List<FacilitatorViewModel> list = APIClient.GetElement<List<FacilitatorViewModel>>(response);
+                    if (list != null)
+                    {
+                        comboBoxFacilitator.DisplayMember = "FacilitatorFIO";
+                        comboBoxFacilitator.ValueMember = "Id";
+                        comboBoxFacilitator.DataSource = list;
+                        comboBoxFacilitator.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -62,14 +61,21 @@ namespace GiftShopView
             }
             try
             {
-                serviceM.TakeCustom(new CustomCoverModel
+                var response = APIClient.PostRequest("api/Main/TakeCustom", new CustomCoverModel
                 {
                     Id = id.Value,
                     FacilitatorId = Convert.ToInt32(comboBoxFacilitator.SelectedValue)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

@@ -2,6 +2,8 @@
 using GiftShopService.Interfaces;
 using GiftShopService.ViewModels;
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Unity;
 using Unity.Attributes;
@@ -10,19 +12,13 @@ namespace GiftShopView
 {
     public partial class FElement : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IElementService service;
 
         private int? id;
 
-        public FElement(IElementService service)
+        public FElement()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FormComponent_Load(object sender, EventArgs e)
@@ -31,10 +27,15 @@ namespace GiftShopView
             {
                 try
                 {
-                    ElementViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Element/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.ElementName;
+                        var element = APIClient.GetElement<ElementViewModel>(response);
+                        textBoxName.Text = element.ElementName;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -53,9 +54,10 @@ namespace GiftShopView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new ElementCoverModel
+                    response = APIClient.PostRequest("api/Element/UpdElement", new ElementCoverModel
                     {
                         Id = id.Value,
                         ElementName = textBoxName.Text
@@ -63,14 +65,21 @@ namespace GiftShopView
                 }
                 else
                 {
-                    service.AddElement(new ElementCoverModel
+                    response = APIClient.PostRequest("api/Element/AddElement", new ElementCoverModel
                     {
                         ElementName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

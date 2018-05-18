@@ -122,7 +122,7 @@ namespace GiftShopService.InventoryDB
             {
                 StorageName = stock.StorageName,
                 TotalCount = stockCompList.Sum(r => r.Count),
-                Elements = stockCompList.Select(r => new Tuple<string, int>(r.Element.ElementName, r.Count))
+                Elements = stockCompList.Select(r => new StorageElementLoadViewModel { ElementName = r.Element.ElementName, Count = r.Count }).ToList()
             })
                             .ToList();
         }
@@ -199,9 +199,9 @@ namespace GiftShopService.InventoryDB
 
                             foreach (var listElem in elem.Elements)
                             {
-                                excelcells.Value2 = listElem.Item1;
+                                excelcells.Value2 = listElem.ElementName;
                                 excelcells.ColumnWidth = 10;
-                                excelcells.get_Offset(0, 1).Value2 = listElem.Item2;
+                                excelcells.get_Offset(0, 1).Value2 = listElem.Count;
                                 excelcells = excelcells.get_Offset(1, 0);
                             }
                         }
@@ -221,7 +221,6 @@ namespace GiftShopService.InventoryDB
             }
             finally
             {
-                //закрываем
                 excel.Quit();
             }
         }
