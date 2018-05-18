@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2008/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">  <AutoRefresh>0</AutoRefresh>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="GiftShopServiceViewModels">
       <ConnectionProperties>
@@ -48,7 +49,8 @@
       </rd:DataSetInfo>
     </DataSet>
   </DataSets>
-
+  <ReportSections>
+    <ReportSection>
       <Body>
         <ReportItems>
           <Tablix Name="Tablix2">
@@ -806,7 +808,8 @@
         <ColumnSpacing>0.13cm</ColumnSpacing>
         <Style />
       </Page>
-
+    </ReportSection>
+  </ReportSections>
   <ReportParameters>
     <ReportParameter Name="ReportParameterPeriod">
       <DataType>String</DataType>
@@ -814,7 +817,19 @@
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
   </ReportParameters>
-  
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>1</NumberOfColumns>
+      <NumberOfRows>1</NumberOfRows>
+      <CellDefinitions>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>ReportParameterPeriod</ParameterName>
+        </CellDefinition>
+      </CellDefinitions>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
   <rd:ReportID>5193ef02-85c6-4d01-b9f6-de74db1433ee</rd:ReportID>
 </Report>

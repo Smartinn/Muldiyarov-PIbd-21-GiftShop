@@ -12,18 +12,9 @@ namespace GiftShopView
 {
     public partial class FMain : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IMainService service;
-
-        private readonly IReportService reportService;
-
-        public FMain(IMainService service, IReportService reportService)
+        public FMain()
         {
             InitializeComponent();
-            this.service = service;
-            this.reportService = reportService;
             LoadData();
         }
 
@@ -31,15 +22,23 @@ namespace GiftShopView
         {
             try
             {
-                List<CustomViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Main/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridView.DataSource = list;
-                    dataGridView.Columns[0].Visible = false;
-                    dataGridView.Columns[1].Visible = false;
-                    dataGridView.Columns[3].Visible = false;
-                    dataGridView.Columns[5].Visible = false;
-                    dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    List<CustomViewModel> list = APIClient.GetElement<List<CustomViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridView.DataSource = list;
+                        dataGridView.Columns[0].Visible = false;
+                        dataGridView.Columns[1].Visible = false;
+                        dataGridView.Columns[3].Visible = false;
+                        dataGridView.Columns[5].Visible = false;
+                        dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
             }
             catch (Exception ex)
@@ -50,43 +49,43 @@ namespace GiftShopView
 
         private void клиентыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FCustomers>();
+            var form = new FCustomers();
             form.ShowDialog();
         }
 
         private void компонентыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FElement>();
+            var form = new FElements();
             form.ShowDialog();
         }
 
         private void изделияToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FGift>();
+            var form = new FGifts();
             form.ShowDialog();
         }
 
         private void складыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FStorage>();
+            var form = new FStorages();
             form.ShowDialog();
         }
 
         private void сотрудникиToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FFacilitator>();
+            var form = new FFacilitators();
             form.ShowDialog();
         }
 
         private void пополнитьСкладToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FPutStorage>();
+            var form = new FPutStorage();
             form.ShowDialog();
         }
 
         private void CreateCustom_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FCreateCustom>();
+            var form = new FCreateCustom();
             form.ShowDialog();
             LoadData();
         }
@@ -95,8 +94,10 @@ namespace GiftShopView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<FTakeCustom>();
-                form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
+                var form = new FTakeCustom
+                {
+                    Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value)
+                };
                 form.ShowDialog();
                 LoadData();
             }
@@ -109,8 +110,18 @@ namespace GiftShopView
                 int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 try
                 {
-                    service.FinishCustom(id);
-                    LoadData();
+                    var response = APIClient.PostRequest("api/Main/FinishCustom", new CustomCoverModel
+                    {
+                        Id = id
+                    });
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -126,8 +137,18 @@ namespace GiftShopView
                 int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 try
                 {
-                    service.PayCustom(id);
-                    LoadData();
+                    var response = APIClient.PostRequest("api/Main/PayCustom", new CustomCoverModel
+                    {
+                        Id = id
+                    });
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -152,11 +173,18 @@ namespace GiftShopView
             {
                 try
                 {
-                    reportService.SaveGiftPrice(new ReportCoverModel
+                    var response = APIClient.PostRequest("api/Report/SaveGiftPrice", new ReportCoverModel
                     {
                         FileName = sfd.FileName
                     });
-                    MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -167,13 +195,13 @@ namespace GiftShopView
 
         private void загруженностьСкладовToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FStorageLoad>();
+            var form = new FStorageLoad();
             form.ShowDialog();
         }
 
         private void заказыКлиентовToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FCustomerCustoms>();
+            var form = new FCustomerCustoms();
             form.ShowDialog();
         }
     }

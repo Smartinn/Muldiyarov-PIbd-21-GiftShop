@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,19 +18,13 @@ namespace GiftShopView
 {
     public partial class FStorage : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IStorageService service;
 
         private int? id;
 
-        public FStorage(IStorageService service)
+        public FStorage()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FStorage_Load(object sender, EventArgs e)
@@ -38,15 +33,21 @@ namespace GiftShopView
             {
                 try
                 {
-                    StorageViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Storage/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.StorageName;
-                        dataGridView.DataSource = view.StorageElements;
+                        var storage = APIClient.GetElement<StorageViewModel>(response);
+                        textBoxName.Text = storage.StorageName;
+                        dataGridView.DataSource = storage.StorageElements;
                         dataGridView.Columns[0].Visible = false;
                         dataGridView.Columns[1].Visible = false;
                         dataGridView.Columns[2].Visible = false;
                         dataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -65,9 +66,10 @@ namespace GiftShopView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new StorageCoverModel
+                    response = APIClient.PostRequest("api/Storage/UpdElement", new StorageCoverModel
                     {
                         Id = id.Value,
                         StorageName = textBoxName.Text
@@ -75,14 +77,21 @@ namespace GiftShopView
                 }
                 else
                 {
-                    service.AddElement(new StorageCoverModel
+                    response = APIClient.PostRequest("api/Storage/AddElement", new StorageCoverModel
                     {
                         StorageName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

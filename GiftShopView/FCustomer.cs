@@ -1,36 +1,24 @@
 ﻿using GiftShopService.CoverModels;
-using GiftShopService.Interfaces;
 using GiftShopService.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace GiftShopView
 {
     public partial class FCustomer : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
         public int Id { set { id = value; } }
 
-        private readonly ICustomerService service;
-
         private int? id;
 
-        public FCustomer(ICustomerService service)
+        public FCustomer()
         {
             InitializeComponent();
-            this.service = service;
         }
+        
 
         private void FCustomer_Load(object sender, EventArgs e)
         {
@@ -38,11 +26,17 @@ namespace GiftShopView
             {
                 try
                 {
-                    CustomerViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/CustomerGet/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        FIO.Text = view.CustomerFIO;
+                        var customer = APIClient.GetElement<CustomerViewModel>(response);
+                        FIO.Text = customer.CustomerFIO;
                     }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -60,9 +54,10 @@ namespace GiftShopView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new CustomerCoverModel
+                    response = APIClient.PostRequest("api/Customer/UpdElement", new CustomerCoverModel
                     {
                         Id = id.Value,
                         CustomerFIO = FIO.Text
@@ -70,14 +65,21 @@ namespace GiftShopView
                 }
                 else
                 {
-                    service.AddElement(new CustomerCoverModel
+                    response = APIClient.PostRequest("api/Customer/AddElement", new CustomerCoverModel
                     {
                         CustomerFIO = FIO.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

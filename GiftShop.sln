@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftShopModel", "GiftShop\GiftShopModel.csproj", "{823D6CBE-3D44-4452-9E33-B58F2E43C9B7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftShopService", "GiftShopService\GiftShopService.csproj", "{A3B9A632-46BD-4FF7-84BA-8FB02C69B424}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftShopView", "GiftShopView\GiftShopView.csproj", "{B2243ADC-9A10-425B-AB9E-5D7281608E97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftShopRestApi", "GiftShopRestApi\GiftShopRestApi.csproj", "{0B30B702-4408-4309-8198-74B43CB5B3F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,8 +29,15 @@ Global
 		{B2243ADC-9A10-425B-AB9E-5D7281608E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2243ADC-9A10-425B-AB9E-5D7281608E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2243ADC-9A10-425B-AB9E-5D7281608E97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B30B702-4408-4309-8198-74B43CB5B3F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B30B702-4408-4309-8198-74B43CB5B3F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B30B702-4408-4309-8198-74B43CB5B3F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B30B702-4408-4309-8198-74B43CB5B3F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D980BFF9-C694-4690-A6CF-D82869DFBA45}
 	EndGlobalSection
 EndGlobal

@@ -16,32 +16,31 @@ namespace GiftShopView
 {
     public partial class FGiftElement : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public GiftElementViewModel Model { set { model = value; } get { return model; } }
-
-        private readonly IElementService service;
+        
 
         private GiftElementViewModel model;
 
-        public FGiftElement(IElementService service)
+        public FGiftElement()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FGiftElement_Load(object sender, EventArgs e)
         {
             try
             {
-                List<ElementViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Element/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
                     comboBoxElement.DisplayMember = "ElementName";
                     comboBoxElement.ValueMember = "Id";
-                    comboBoxElement.DataSource = list;
+                    comboBoxElement.DataSource = APIClient.GetElement<List<ElementViewModel>>(response);
                     comboBoxElement.SelectedItem = null;
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using GiftShopService.Interfaces;
+﻿using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -10,15 +10,10 @@ namespace GiftShopView
 {
     public partial class FCustomers : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
-        private readonly ICustomerService service;
-
-        public FCustomers(ICustomerService service)
+        public FCustomers()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FCustomers_Load(object sender, EventArgs e)
@@ -30,12 +25,20 @@ namespace GiftShopView
         {
             try
             {
-                List<CustomerViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Customer/GetList");
+                if (response.Result.IsSuccessStatusCode) 
                 {
-                    dataGridView.DataSource = list;
-                    dataGridView.Columns[0].Visible = false;
-                    dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    List<CustomerViewModel> list = APIClient.GetElement<List<CustomerViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridView.DataSource = list;
+                        dataGridView.Columns[0].Visible = false;
+                        dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -46,7 +49,7 @@ namespace GiftShopView
 
         private void Add_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FCustomer>();
+            var form = new FCustomer();
             if (form.ShowDialog() == DialogResult.OK)
             {
                 LoadData();
@@ -67,7 +70,11 @@ namespace GiftShopView
                     int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                     try
                     {
-                        service.DelElement(id);
+                        var response = APIClient.PostRequest("api/Customer/DelElement", new CustomerCoverModel { Id = id });
+                        if (!response.Result.IsSuccessStatusCode)
+                        {
+                            throw new Exception(APIClient.GetError(response));
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -82,7 +89,7 @@ namespace GiftShopView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<FCustomer>();
+                var form = new FCustomer();
                 form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 if (form.ShowDialog() == DialogResult.OK)
                 {
