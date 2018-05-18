@@ -152,7 +152,7 @@ namespace GiftShopView
 
         private void Upd_Click(object sender, EventArgs e)
         {
-                LoadData();
+            LoadData();
         }
 
         private void прайсToolStripMenuItem_Click(object sender, EventArgs e)
@@ -194,6 +194,13 @@ namespace GiftShopView
         {
             var form = new FCustomerCustoms();
             form.ShowDialog();
+        }
+
+        private void письмаToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            var form = new FMails();
+            form.ShowDialog();
+
         }
     }
 }

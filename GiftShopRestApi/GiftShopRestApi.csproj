@@ -144,6 +144,7 @@
     <Compile Include="Controllers\FacilitatorController.cs" />
     <Compile Include="Controllers\GiftController.cs" />
     <Compile Include="Controllers\MainController.cs" />
+    <Compile Include="Controllers\MessageInfoController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Controllers\StorageController.cs" />
     <Compile Include="Global.asax.cs">
