@@ -5,6 +5,7 @@ using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using GiftShop;
 using GiftShopModel;
+using System.Linq;
 
 namespace GiftShopService.InventoryLIst
 {
@@ -19,48 +20,38 @@ namespace GiftShopService.InventoryLIst
 
         public List<FacilitatorViewModel> GetList()
         {
-            List<FacilitatorViewModel> result = new List<FacilitatorViewModel>();
-            for (int i = 0; i < source.Facilitators.Count; ++i)
-            {
-                result.Add(new FacilitatorViewModel
+            List<FacilitatorViewModel> result = source.Facilitators
+                .Select(rec => new FacilitatorViewModel
                 {
-                    Id = source.Facilitators[i].Id,
-                    FacilitatorFIO = source.Facilitators[i].FacilitatorFIO
-                });
-            }
+                    Id = rec.Id,
+                    FacilitatorFIO = rec.FacilitatorFIO
+                })
+                .ToList();
             return result;
         }
 
         public FacilitatorViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Facilitators.Count; ++i)
+            Facilitator element = source.Facilitators.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Facilitators[i].Id == id)
+                return new FacilitatorViewModel
                 {
-                    return new FacilitatorViewModel
-                    {
-                        Id = source.Facilitators[i].Id,
-                        FacilitatorFIO = source.Facilitators[i].FacilitatorFIO
-                    };
-                }
+                    Id = element.Id,
+                    FacilitatorFIO = element.FacilitatorFIO
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(FacilitatorCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Facilitators.Count; ++i)
+            Facilitator element = source.Facilitators.FirstOrDefault(rec => rec.FacilitatorFIO == model.FacilitatorFIO);
+            if (element != null)
             {
-                if (source.Facilitators[i].Id > maxId)
-                {
-                    maxId = source.Facilitators[i].Id;
-                }
-                if (source.Facilitators[i].FacilitatorFIO == model.FacilitatorFIO)
-                {
-                    throw new Exception("Уже есть сотрудник с таким ФИО");
-                }
+                throw new Exception("Уже есть сотрудник с таким ФИО");
             }
+            int maxId = source.Facilitators.Count > 0 ? source.Facilitators.Max(rec => rec.Id) : 0;
             source.Facilitators.Add(new Facilitator
             {
                 Id = maxId + 1,
@@ -70,37 +61,31 @@ namespace GiftShopService.InventoryLIst
 
         public void UpdElement(FacilitatorCoverModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Facilitators.Count; ++i)
+            Facilitator element = source.Facilitators.FirstOrDefault(rec =>
+                                        rec.FacilitatorFIO == model.FacilitatorFIO && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Facilitators[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Facilitators[i].FacilitatorFIO == model.FacilitatorFIO &&
-                    source.Facilitators[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть сотрудник с таким ФИО");
-                }
+                throw new Exception("Уже есть сотрудник с таким ФИО");
             }
-            if (index == -1)
+            element = source.Facilitators.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Facilitators[index].FacilitatorFIO = model.FacilitatorFIO;
+            element.FacilitatorFIO = model.FacilitatorFIO;
         }
 
         public void DelElement(int id)
         {
-            for (int i = 0; i < source.Facilitators.Count; ++i)
+            Facilitator element = source.Facilitators.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Facilitators[i].Id == id)
-                {
-                    source.Facilitators.RemoveAt(i);
-                    return;
-                }
+                source.Facilitators.Remove(element);
             }
-            throw new Exception("Элемент не найден");
+            else
+            {
+                throw new Exception("Элемент не найден");
+            }
         }
     }
 }

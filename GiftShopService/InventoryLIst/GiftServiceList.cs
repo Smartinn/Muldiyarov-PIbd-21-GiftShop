@@ -5,6 +5,7 @@ using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using GiftShop;
 using GiftShopModel;
+using System.Linq;
 
 namespace GiftShopService.InventoryLIst
 {
@@ -19,235 +20,164 @@ namespace GiftShopService.InventoryLIst
 
         public List<GiftViewModel> GetList()
         {
-            List<GiftViewModel> result = new List<GiftViewModel>();
-            for (int i = 0; i < source.Gifts.Count; ++i)
-            {
-                List<GiftElementViewModel> GiftComponents = new List<GiftElementViewModel>();
-                for (int j = 0; j < source.GiftElements.Count; ++j)
+            List<GiftViewModel> result = source.Gifts
+                .Select(rec => new GiftViewModel
                 {
-                    if (source.GiftElements[j].ElementId == source.Gifts[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Elements.Count; ++k)
-                        {
-                            if (source.GiftElements[j].ElementId == source.Elements[k].Id)
+                    Id = rec.Id,
+                    GiftName = rec.GiftName,
+                    Price = rec.Value,
+                    GiftElements = source.GiftElements
+                            .Where(recPC => recPC.GiftId == rec.Id)
+                            .Select(recPC => new GiftElementViewModel
                             {
-                                componentName = source.Elements[k].ElementName;
-                                break;
-                            }
-                        }
-                        GiftComponents.Add(new GiftElementViewModel
-                        {
-                            Id = source.GiftElements[j].Id,
-                            ElementId = source.GiftElements[j].ElementId,
-                            GiftId = source.GiftElements[j].GiftId,
-                            ElementName = componentName,
-                            Count = source.GiftElements[j].Count
-                        });
-                    }
-                }
-                result.Add(new GiftViewModel
-                {
-                    Id = source.Gifts[i].Id,
-                    GiftName = source.Gifts[i].GiftName,
-                    Price = source.Gifts[i].Value,
-                    GiftElements = GiftComponents
-                });
-            }
+                                Id = recPC.Id,
+                                GiftId = recPC.GiftId,
+                                ElementId = recPC.ElementId,
+                                ElementName = source.Elements
+                                    .FirstOrDefault(recC => recC.Id == recPC.ElementId)?.ElementName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public GiftViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Gifts.Count; ++i)
+            Gift element = source.Gifts.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                List<GiftElementViewModel> giftComponents = new List<GiftElementViewModel>();
-                for (int j = 0; j < source.GiftElements.Count; ++j)
+                return new GiftViewModel
                 {
-                    if (source.GiftElements[j].GiftId == source.Gifts[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Elements.Count; ++k)
-                        {
-                            if (source.GiftElements[j].ElementId == source.Elements[k].Id)
+                    Id = element.Id,
+                    GiftName = element.GiftName,
+                    Price = element.Value,
+                    GiftElements = source.GiftElements
+                            .Where(recPC => recPC.GiftId == element.Id)
+                            .Select(recPC => new GiftElementViewModel
                             {
-                                componentName = source.Elements[k].ElementName;
-                                break;
-                            }
-                        }
-                        giftComponents.Add(new GiftElementViewModel
-                        {
-                            Id = source.GiftElements[j].Id,
-                            GiftId = source.GiftElements[j].GiftId,
-                            ElementId = source.GiftElements[j].ElementId,
-                            ElementName = componentName,
-                            Count = source.GiftElements[j].Count
-                        });
-                    }
-                }
-                if (source.Gifts[i].Id == id)
-                {
-                    return new GiftViewModel
-                    {
-                        Id = source.Gifts[i].Id,
-                        GiftName = source.Gifts[i].GiftName,
-                        Price = source.Gifts[i].Value,
-                        GiftElements = giftComponents
-                    };
-                }
+                                Id = recPC.Id,
+                                GiftId = recPC.GiftId,
+                                ElementId = recPC.ElementId,
+                                ElementName = source.Elements
+                                        .FirstOrDefault(recC => recC.Id == recPC.ElementId)?.ElementName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
-
             throw new Exception("Элемент не найден");
+
+            
         }
 
         public void AddElement(GiftCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Gifts.Count; ++i)
+            Gift element = source.Gifts.FirstOrDefault(rec => rec.GiftName == model.GiftName);
+            if (element != null)
             {
-                if (source.Gifts[i].Id > maxId)
-                {
-                    maxId = source.Gifts[i].Id;
-                }
-                if (source.Gifts[i].GiftName == model.GiftName)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть изделие с таким названием");
             }
+            int maxId = source.Gifts.Count > 0 ? source.Gifts.Max(rec => rec.Id) : 0;
             source.Gifts.Add(new Gift
             {
                 Id = maxId + 1,
                 GiftName = model.GiftName,
                 Value = model.Price
             });
-            int maxPCId = 0;
-            for (int i = 0; i < source.GiftElements.Count; ++i)
+            int maxPCId = source.GiftElements.Count > 0 ?
+                                    source.GiftElements.Max(rec => rec.Id) : 0;
+            var groupElements = model.GiftElements
+                                        .GroupBy(rec => rec.ElementId)
+                                        .Select(rec => new
+                                        {
+                                            ElementId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
+            foreach (var groupElement in groupElements)
             {
-                if (source.GiftElements[i].Id > maxPCId)
-                {
-                    maxPCId = source.GiftElements[i].Id;
-                }
-            }
-            for (int i = 0; i < model.GiftElements.Count; ++i)
-            {
-                for (int j = 1; j < model.GiftElements.Count; ++j)
-                {
-                    if (model.GiftElements[i].ElementId ==
-                        model.GiftElements[j].ElementId)
-                    {
-                        model.GiftElements[i].Count +=
-                            model.GiftElements[j].Count;
-                        model.GiftElements.RemoveAt(j--);
-                    }
-                }
-            }
-            for (int i = 0; i < model.GiftElements.Count; ++i)
-            {
-                source.GiftElements.Add(new GiftElement
+                source.GiftElements.Add(new GiftElement 
                 {
                     Id = ++maxPCId,
                     GiftId = maxId + 1,
-                    ElementId = model.GiftElements[i].ElementId,
-                    Count = model.GiftElements[i].Count
+                    ElementId = groupElement.ElementId,
+                    Count = groupElement.Count
                 });
             }
         }
 
         public void UpdElement(GiftCoverModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Gifts.Count; ++i)
+            Gift element = source.Gifts.FirstOrDefault(rec =>
+                                        rec.GiftName == model.GiftName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Gifts[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Gifts[i].GiftName == model.GiftName &&
-                    source.Gifts[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть изделие с таким названием");
             }
-            if (index == -1)
+            element = source.Gifts.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Gifts[index].GiftName = model.GiftName;
-            source.Gifts[index].Value = model.Price;
-            int maxPCId = 0;
-            for (int i = 0; i < source.GiftElements.Count; ++i)
+            element.GiftName = model.GiftName;
+            element.Value = model.Price;
+
+            int maxPCId = source.GiftElements.Count > 0 ? source.GiftElements.Max(rec => rec.Id) : 0;
+            var compIds = model.GiftElements.Select(rec => rec.ElementId).Distinct();
+            var updateElements = source.GiftElements
+                                            .Where(rec => rec.GiftId == model.Id &&
+                                           compIds.Contains(rec.ElementId));
+            foreach (var updateElement in updateElements)
             {
-                if (source.GiftElements[i].Id > maxPCId)
+                updateElement.Count = model.GiftElements
+                                                .FirstOrDefault(rec => rec.Id == updateElement.Id).Count;
+            }
+            source.GiftElements.RemoveAll(rec => rec.GiftId == model.Id &&
+                                       !compIds.Contains(rec.ElementId));
+            var groupElements = model.GiftElements
+                                        .Where(rec => rec.Id == 0)
+                                        .GroupBy(rec => rec.ElementId)
+                                        .Select(rec => new
+                                        {
+                                            ElementId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
+            foreach (var groupElement in groupElements)
+            {
+                GiftElement elementPC = source.GiftElements
+                                        .FirstOrDefault(rec => rec.GiftId == model.Id &&
+                                                        rec.ElementId == groupElement.ElementId);
+                if (elementPC != null)
                 {
-                    maxPCId = source.GiftElements[i].Id;
+                    elementPC.Count += groupElement.Count;
+                }
+                else
+                {
+                    source.GiftElements.Add(new GiftElement
+                    {
+                        Id = ++maxPCId,
+                        GiftId = model.Id,
+                        ElementId = groupElement.ElementId,
+                        Count = groupElement.Count
+                    });
                 }
             }
-            for (int i = 0; i < source.GiftElements.Count; ++i)
-            {
-                if (source.GiftElements[i].GiftId == model.Id)
-                {
-                    bool flag = true;
-                    for (int j = 0; j < model.GiftElements.Count; ++j)
-                    {
-                        if (source.GiftElements[i].Id == model.GiftElements[j].Id)
-                        {
-                            source.GiftElements[i].Count = model.GiftElements[j].Count;
-                            flag = false;
-                            break;
-                        }
-                    }
-                    if (flag)
-                    {
-                        source.GiftElements.RemoveAt(i--);
-                    }
-                }
-            }
-            for (int i = 0; i < model.GiftElements.Count; ++i)
-            {
-                if (model.GiftElements[i].Id == 0)
-                {
-                    for (int j = 0; j < source.GiftElements.Count; ++j)
-                    {
-                        if (source.GiftElements[j].GiftId == model.Id &&
-                            source.GiftElements[j].ElementId == model.GiftElements[i].ElementId)
-                        {
-                            source.GiftElements[j].Count += model.GiftElements[i].Count;
-                            model.GiftElements[i].Id = source.GiftElements[j].Id;
-                            break;
-                        }
-                    }
-                    if (model.GiftElements[i].Id == 0)
-                    {
-                        source.GiftElements.Add(new GiftElement
-                        {
-                            Id = ++maxPCId,
-                            GiftId = model.Id,
-                            ElementId = model.GiftElements[i].ElementId,
-                            Count = model.GiftElements[i].Count
-                        });
-                    }
-                }
-            }
+            
         }
 
         public void DelElement(int id)
         {
-            for (int i = 0; i < source.GiftElements.Count; ++i)
+            Gift element = source.Gifts.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.GiftElements[i].GiftId == id)
-                {
-                    source.GiftElements.RemoveAt(i--);
-                }
+                source.GiftElements.RemoveAll(rec => rec.GiftId == id);
+                source.Gifts.Remove(element);
             }
-            for (int i = 0; i < source.Gifts.Count; ++i)
+            else
             {
-                if (source.Gifts[i].Id == id)
-                {
-                    source.Gifts.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
 
     }

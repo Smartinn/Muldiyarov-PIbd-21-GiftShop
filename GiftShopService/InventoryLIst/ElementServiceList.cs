@@ -5,6 +5,7 @@ using GiftShopService.CoverModels;
 using GiftShopService.ViewModels;
 using GiftShop;
 using GiftShopModel;
+using System.Linq;
 
 namespace GiftShopService.InventoryLIst
 {
@@ -19,48 +20,38 @@ namespace GiftShopService.InventoryLIst
 
         public List<ElementViewModel> GetList()
         {
-            List<ElementViewModel> result = new List<ElementViewModel>();
-            for (int i = 0; i < source.Elements.Count; ++i)
-            {
-                result.Add(new ElementViewModel
+            List<ElementViewModel> result = source.Elements
+                .Select(rec => new ElementViewModel
                 {
-                    Id = source.Elements[i].Id,
-                    ElementName = source.Elements[i].ElementName
-                });
-            }
+                    Id = rec.Id,
+                    ElementName = rec.ElementName
+                })
+                .ToList();
             return result;
         }
 
         public ElementViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Elements.Count; ++i)
+            Element element = source.Elements.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Elements[i].Id == id)
+                return new ElementViewModel
                 {
-                    return new ElementViewModel
-                    {
-                        Id = source.Elements[i].Id,
-                        ElementName = source.Elements[i].ElementName
-                    };
-                }
+                    Id = element.Id,
+                    ElementName = element.ElementName
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(ElementCoverModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Elements.Count; ++i)
+            Element element = source.Elements.FirstOrDefault(rec => rec.ElementName == model.ElementName);
+            if (element != null)
             {
-                if (source.Elements[i].Id > maxId)
-                {
-                    maxId = source.Elements[i].Id;
-                }
-                if (source.Elements[i].ElementName == model.ElementName)
-                {
-                    throw new Exception("Уже есть компонент с таким названием");
-                }
+                throw new Exception("Уже есть компонент с таким названием");
             }
+            int maxId = source.Elements.Count > 0 ? source.Elements.Max(rec => rec.Id) : 0;
             source.Elements.Add(new Element
             {
                 Id = maxId + 1,
@@ -70,37 +61,31 @@ namespace GiftShopService.InventoryLIst
 
         public void UpdElement(ElementCoverModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Elements.Count; ++i)
+            Element element = source.Elements.FirstOrDefault(rec =>
+                                        rec.ElementName == model.ElementName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Elements[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Elements[i].ElementName == model.ElementName &&
-                    source.Elements[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть компонент с таким названием");
-                }
+                throw new Exception("Уже есть компонент с таким названием");
             }
-            if (index == -1)
+            element = source.Elements.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Elements[index].ElementName = model.ElementName;
+            element.ElementName = model.ElementName;
         }
 
         public void DelElement(int id)
         {
-            for (int i = 0; i < source.Elements.Count; ++i)
+            Element element = source.Elements.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Elements[i].Id == id)
-                {
-                    source.Elements.RemoveAt(i);
-                    return;
-                }
+                source.Elements.Remove(element);
             }
-            throw new Exception("Элемент не найден");
+            else
+            {
+                throw new Exception("Элемент не найден");
+            }
         }
     }
 }
