@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace GiftShopModel
 {
     public class GiftElement
@@ -15,5 +10,9 @@ namespace GiftShopModel
         public int ElementId { get; set; }
 
         public int Count { get; set; }
+
+        public virtual Gift Gift { get; set; }
+
+        public virtual Element Element { get; set; }
     }
 }

@@ -1,7 +1,10 @@
 ﻿
+using GiftShopService;
 using GiftShopService.Interfaces;
+using GiftShopService.InventoryDB;
 using GiftShopService.InventoryLIst;
 using System;
+using System.Data.Entity;
 using System.Windows.Forms;
 using Unity;
 using Unity.Lifetime;
@@ -25,12 +28,13 @@ namespace GiftShopView
         private static IUnityContainer BuildUnityContainer()
         {
             var currentContainer = new UnityContainer();
-            currentContainer.RegisterType<ICustomerService, CustomerServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IElementService, ElementServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IFacilitatorService, FacilitatorServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IGiftService, GiftServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IStorageService, StorageServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IMainService, MainServiceList>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<DbContext, GiftDBContext>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<ICustomerService, CustomerServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IElementService, ElementServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IFacilitatorService, FacilitatorServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IGiftService, GiftServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IStorageService, StorageServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IMainService, MainServiceBD>(new HierarchicalLifetimeManager());
             return currentContainer;
         }
     }

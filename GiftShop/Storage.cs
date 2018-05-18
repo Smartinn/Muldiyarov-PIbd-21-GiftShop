@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GiftShopModel
 {
     public class Storage
     {
         public int Id { get; set; }
-        public object StorageElements { get; set; }
+        [Required]
         public string StorageName { get; set; }
+        [ForeignKey("StorageId")]
+        public virtual List<StorageElement> StorageElements { get; set; }
+
+        
     }
 }
