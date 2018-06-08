@@ -5,16 +5,15 @@ using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FFacilitator : System.Web.UI.Page
     {
-        private readonly IFacilitatorService service = new FacilitatorServiceList();
+        private readonly IFacilitatorService service = UnityConfig.Container.Resolve<IFacilitatorService>();
 
         private int id;
-
-        private string name;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -25,21 +24,10 @@ namespace GiftShopViewWeb
                     FacilitatorViewModel view = service.GetElement(id);
                     if (view != null)
                     {
-                        name = view.FacilitatorFIO;
-                        service.UpdElement(new FacilitatorCoverModel
+                        if (!Page.IsPostBack)
                         {
-                            Id = id,
-                            FacilitatorFIO = ""
-                        });
-                        if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(TextBoxFIO.Text))
-                        {
-                            TextBoxFIO.Text = name;
+                            TextBoxFIO.Text = view.FacilitatorFIO;
                         }
-                        service.UpdElement(new FacilitatorCoverModel
-                        {
-                            Id = id,
-                            FacilitatorFIO = name
-                        });
                     }
                 }
                 catch (Exception ex)

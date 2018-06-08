@@ -5,12 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FGifts : System.Web.UI.Page
     {
-        private readonly IGiftService service = new GiftServiceList();
+        private readonly IGiftService service = UnityConfig.Container.Resolve<IGiftService>();
 
         List<GiftViewModel> list;
 

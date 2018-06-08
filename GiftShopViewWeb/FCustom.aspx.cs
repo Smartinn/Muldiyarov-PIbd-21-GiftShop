@@ -6,38 +6,42 @@ using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FCustom : System.Web.UI.Page
     {
-        private readonly ICustomerService serviceC = new CustomerServiceList();
+        private readonly ICustomerService serviceC = UnityConfig.Container.Resolve<ICustomerService>();
 
-        private readonly IGiftService serviceS = new GiftServiceList();
+        private readonly IGiftService serviceS = UnityConfig.Container.Resolve<IGiftService>();
 
-        private readonly IMainService serviceM = new MainServiceList();
+        private readonly IMainService serviceM = UnityConfig.Container.Resolve<IMainService>();
 
         protected void Page_Load(object sender, EventArgs e)
         {
             try
             {
-                List<CustomerViewModel> listC = serviceC.GetList();
-                if (listC != null)
+                if (!Page.IsPostBack)
                 {
-                    DropDownListCustomer.DataSource = listC;
-                    DropDownListCustomer.DataBind();
-                    DropDownListCustomer.DataTextField = "CustomerFIO";
-                    DropDownListCustomer.DataValueField = "Id";
+                    List<CustomerViewModel> listC = serviceC.GetList();
+                    if (listC != null)
+                    {
+                        DropDownListCustomer.DataSource = listC;
+                        DropDownListCustomer.DataBind();
+                        DropDownListCustomer.DataTextField = "CustomerFIO";
+                        DropDownListCustomer.DataValueField = "Id";
+                    }
+                    List<GiftViewModel> listP = serviceS.GetList();
+                    if (listP != null)
+                    {
+                        DropDownListService.DataSource = listP;
+                        DropDownListService.DataBind();
+                        DropDownListService.DataTextField = "GiftName";
+                        DropDownListService.DataValueField = "Id";
+                    }
+                    Page.DataBind();
                 }
-                List<GiftViewModel> listP = serviceS.GetList();
-                if (listP != null)
-                {
-                    DropDownListService.DataSource = listP;
-                    DropDownListService.DataBind();
-                    DropDownListService.DataTextField = "GiftName";
-                    DropDownListService.DataValueField = "Id";
-                }
-                Page.DataBind();
             }
             catch (Exception ex)
             {
@@ -55,7 +59,7 @@ namespace GiftShopViewWeb
                     int id = Convert.ToInt32(DropDownListService.SelectedValue);
                     GiftViewModel product = serviceS.GetElement(id);
                     int count = Convert.ToInt32(TextBoxCount.Text);
-                    TextBoxSum.Text = (count * product.Price).ToString();
+                    TextBoxSum.Text = ((int)(count * product.Price)).ToString();
                 }
                 catch (Exception ex)
                 {

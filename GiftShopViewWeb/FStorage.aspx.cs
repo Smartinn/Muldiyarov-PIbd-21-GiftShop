@@ -4,16 +4,16 @@ using System;
 using System.Web.UI;
 using GiftShopServiceWeb.ViewModels;
 using GiftShopServiceWeb.CoverModels;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FStorage : System.Web.UI.Page
     {
-        private readonly IStorageService service = new StorageServiceList();
+        private readonly IStorageService service = UnityConfig.Container.Resolve<IStorageService>();
 
         private int id;
-
-        private string name;
+        
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -24,27 +24,15 @@ namespace GiftShopViewWeb
                     StorageViewModel view = service.GetElement(id);
                     if (view != null)
                     {
-                        name = view.StorageName;
+                        if (!Page.IsPostBack)
+                        {
+                            textBoxName.Text = view.StorageName;
+                        }
                         dataGridView.DataSource = view.StorageElements;
                         dataGridView.DataBind();
-                        dataGridView.Columns[1].Visible = false;
-                        dataGridView.Columns[2].Visible = false;
-                        dataGridView.Columns[3].Visible = false;
-                        service.UpdElement(new StorageCoverModel
-                        {
-                            Id = id,
-                            StorageName = ""
-                        });
-                        if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(textBoxName.Text))
-                        {
-                            textBoxName.Text = name;
-                        }
-                        service.UpdElement(new StorageCoverModel
-                        {
-                            Id = id,
-                            StorageName = name
-                        });
+                        dataGridView.ShowHeaderWhenEmpty = true;
                     }
+                    Page.DataBind();
                 }
                 catch (Exception ex)
                 {

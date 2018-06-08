@@ -5,17 +5,18 @@ using GiftShopServiceWeb.Interfaces;
 using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
+using Unity;
 using System.Web.UI.WebControls;
 
 namespace GiftShopViewWeb
 {
     public partial class FPutStorage : System.Web.UI.Page
     {
-        private readonly IStorageService serviceS = new StorageServiceList();
+        private readonly IStorageService serviceS = UnityConfig.Container.Resolve<IStorageService>();
 
-        private readonly IElementService serviceE = new ElementServiceList();
+        private readonly IElementService serviceE = UnityConfig.Container.Resolve<IElementService>();
 
-        private readonly IMainService serviceM = new MainServiceList();
+        private readonly IMainService serviceM = UnityConfig.Container.Resolve<IMainService>();
 
         protected void Page_Load(object sender, EventArgs e)
         {
