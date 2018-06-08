@@ -87,10 +87,8 @@ namespace GiftShopView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = new FCustomer
-                {
-                    Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value)
-                };
+                var form = new FCustomer();
+                form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 form.ShowDialog();
             }
         }
