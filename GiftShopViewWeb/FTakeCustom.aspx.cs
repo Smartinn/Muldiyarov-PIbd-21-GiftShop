@@ -6,14 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FTakeCustom : System.Web.UI.Page
     {
-        private readonly IFacilitatorService serviceP = new FacilitatorServiceList();
+        private readonly IFacilitatorService serviceP = UnityConfig.Container.Resolve<IFacilitatorService>();
 
-        private readonly IMainService serviceM = new MainServiceList();
+        private readonly IMainService serviceM = UnityConfig.Container.Resolve<IMainService>();
 
         private int id;
 

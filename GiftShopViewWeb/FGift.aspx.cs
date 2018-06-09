@@ -8,12 +8,13 @@ using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Drawing;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FGift : System.Web.UI.Page
     {
-        private readonly IGiftService service = new GiftServiceList();
+        private readonly IGiftService service = UnityConfig.Container.Resolve<IGiftService>();
 
         private int id;
 
@@ -30,8 +31,11 @@ namespace GiftShopViewWeb
                     GiftViewModel view = service.GetElement(id);
                     if (view != null)
                     {
-                        textBoxName.Text = view.GiftName;
-                        textBoxPrice.Text = view.Price.ToString();
+                        if (!Page.IsPostBack)
+                        {
+                            textBoxName.Text = view.GiftName;
+                            textBoxPrice.Text = ((int)view.Price).ToString();
+                        }
                         productComponents = view.GiftElements;
                         LoadData();
                     }
@@ -43,35 +47,39 @@ namespace GiftShopViewWeb
             }
             else
             {
-                if (service.GetList().Count == 0 || service.GetList().Last().GiftName != null)
-                {
-                    productComponents = new List<GiftElementViewModel>();
-                    LoadData();
-                }
-                else
-                {
-                    productComponents = service.GetList().Last().GiftElements;
-                    LoadData();
-                }
+                productComponents = new List<GiftElementViewModel>();
             }
             if (Session["SEId"] != null)
             {
-                model = new GiftElementViewModel
-                {
-                    Id = (int)Session["SEId"],
-                    GiftId = (int)Session["SEGiftId"],
-                    ElementId = (int)Session["SEElementId"],
-                    ElementName = (string)Session["SEElementName"],
-                    Count = (int)Session["SECount"]
-                };
                 if (Session["SEIs"] != null)
                 {
+                    model = new GiftElementViewModel
+                    {
+                        Id = (int)Session["SEId"],
+                        GiftId = (int)Session["SEGiftId"],
+                        ElementId = (int)Session["SEElementId"],
+                        ElementName = (string)Session["SEElementName"],
+                        Count = (int)Session["SECount"]
+                    };
                     productComponents[(int)Session["SEIs"]] = model;
                 }
                 else
                 {
+                    model = new GiftElementViewModel
+                    {
+                        GiftId = (int)Session["SEGiftId"],
+                        ElementId = (int)Session["SEElementId"],
+                        ElementName = (string)Session["SEElementName"],
+                        Count = (int)Session["SECount"]
+                    };
                     productComponents.Add(model);
                 }
+                Session["SEId"] = null;
+                Session["SEGiftId"] = null;
+                Session["SEElementId"] = null;
+                Session["SEElementName"] = null;
+                Session["SECount"] = null;
+                Session["SEIs"] = null;
             }
             List<GiftElementCoverModel> productComponentBM = new List<GiftElementCoverModel>();
             for (int i = 0; i < productComponents.Count; ++i)
@@ -86,51 +94,29 @@ namespace GiftShopViewWeb
             }
             if (productComponentBM.Count != 0)
             {
-                if (service.GetList().Count == 0 || service.GetList().Last().GiftName != null)
+                if (Int32.TryParse((string)Session["id"], out id))
                 {
-                    service.AddElement(new GiftCoverModel
+                    service.UpdElement(new GiftCoverModel
                     {
-                        GiftName = null,
-                        Price = -1,
+                        Id = id,
+                        GiftName = textBoxName.Text,
+                        Price = Convert.ToInt32(textBoxPrice.Text),
                         GiftElements = productComponentBM
                     });
                 }
                 else
                 {
-                    service.UpdElement(new GiftCoverModel
+                    service.AddElement(new GiftCoverModel
                     {
-                        Id = service.GetList().Last().Id,
-                        GiftName = null,
-                        Price = -1,
+                        GiftName = "-0",
+                        Price = 0,
                         GiftElements = productComponentBM
                     });
-                }
-
-            }
-            try
-            {
-                if (productComponents != null)
-                {
-                    dataGridView.DataBind();
-                    dataGridView.DataSource = productComponents;
-                    dataGridView.DataBind();
-                    dataGridView.ShowHeaderWhenEmpty = true;
-                    dataGridView.SelectedRowStyle.BackColor = Color.Silver;
-                    dataGridView.Columns[1].Visible = false;
-                    dataGridView.Columns[2].Visible = false;
-                    dataGridView.Columns[3].Visible = false;
+                    Session["id"] = service.GetList().Last().Id.ToString();
+                    Session["Change"] = "0";
                 }
             }
-            catch (Exception ex)
-            {
-                Page.ClientScript.RegisterStartupScript(this.GetType(), "Scripts", "<script>alert('" + ex.Message + "');</script>");
-            }
-            Session["SEId"] = null;
-            Session["SEGiftId"] = null;
-            Session["SEElementId"] = null;
-            Session["SEElementName"] = null;
-            Session["SECount"] = null;
-            Session["SEIs"] = null;
+            LoadData();
         }
 
         private void LoadData()
@@ -144,9 +130,6 @@ namespace GiftShopViewWeb
                     dataGridView.DataBind();
                     dataGridView.ShowHeaderWhenEmpty = true;
                     dataGridView.SelectedRowStyle.BackColor = Color.Silver;
-                    dataGridView.Columns[1].Visible = false;
-                    dataGridView.Columns[2].Visible = false;
-                    dataGridView.Columns[3].Visible = false;
                 }
             }
             catch (Exception ex)
@@ -164,12 +147,14 @@ namespace GiftShopViewWeb
         {
             if (dataGridView.SelectedIndex >= 0)
             {
-                Session["SEId"] = model.Id;
-                Session["SEGiftId"] = model.GiftId;
-                Session["SEElementId"] = model.ElementId;
+                model = service.GetElement(id).GiftElements[dataGridView.SelectedIndex];
+                Session["SEId"] = model.Id.ToString();
+                Session["SEGiftId"] = model.GiftId.ToString();
+                Session["SEElementId"] = model.ElementId.ToString();
                 Session["SEElementName"] = model.ElementName;
-                Session["SECount"] = model.Count;
-                Session["SEIs"] = dataGridView.SelectedIndex;
+                Session["SECount"] = model.Count.ToString();
+                Session["SEIs"] = dataGridView.SelectedIndex.ToString();
+                Session["Change"] = "0";
                 Server.Transfer("FGiftElement.aspx");
             }
         }
@@ -225,7 +210,7 @@ namespace GiftShopViewWeb
                         Count = productComponents[i].Count
                     });
                 }
-                service.DelElement(service.GetList().Last().Id);
+                //service.DelElement(service.GetList().Last().Id);
                 if (Int32.TryParse((string)Session["id"], out id))
                 {
                     service.UpdElement(new GiftCoverModel
@@ -246,6 +231,7 @@ namespace GiftShopViewWeb
                     });
                 }
                 Session["id"] = null;
+                Session["Change"] = null;
                 Page.ClientScript.RegisterStartupScript(this.GetType(), "Scripts", "<script>alert('Сохранение прошло успешно');</script>");
                 Server.Transfer("FGifts.aspx");
             }
@@ -261,7 +247,12 @@ namespace GiftShopViewWeb
             {
                 service.DelElement(service.GetList().Last().Id);
             }
+            if (!String.Equals(Session["Change"], null))
+            {
+                service.DelElement(id);
+            }
             Session["id"] = null;
+            Session["Change"] = null;
             Server.Transfer("FGifts.aspx");
         }
 

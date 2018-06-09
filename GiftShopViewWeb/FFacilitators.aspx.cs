@@ -6,13 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
+using Unity;
 using System.Web.UI.WebControls;
 
 namespace GiftShopViewWeb
 {
     public partial class FFacilitators : System.Web.UI.Page
     {
-        private readonly IFacilitatorService service = new FacilitatorServiceList();
+        private readonly IFacilitatorService service = UnityConfig.Container.Resolve<IFacilitatorService>();
 
         List<FacilitatorViewModel> list;
 

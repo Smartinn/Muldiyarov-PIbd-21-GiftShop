@@ -30,8 +30,11 @@
             <Columns>
                 <asp:BoundField DataField="Id" HeaderText="Id" SortExpression="Id" />
                 <asp:CommandField ShowSelectButton="true" SelectText=">>" />
+                <asp:BoundField DataField="CustomerId" HeaderText="CustomerId" SortExpression="CustomerId" />
                 <asp:BoundField DataField="CustomerFIO" HeaderText="Клиент" SortExpression="CustomerFIO" />
+                <asp:BoundField DataField="GiftId" HeaderText="GiftId" SortExpression="GiftId" />
                 <asp:BoundField DataField="GiftName" HeaderText="Подарок" SortExpression="GiftName" />
+                <asp:BoundField DataField="FacilitatorId" HeaderText="FacilitatorId" SortExpression="FacilitatorId" />
                 <asp:BoundField DataField="FacilitatorFIO" HeaderText="Исполнитель" SortExpression="FacilitatorFIO" />
                 <asp:BoundField DataField="Count" HeaderText="Количество" SortExpression="Count" />
                 <asp:BoundField DataField="Summa" HeaderText="Цена" SortExpression="Summa" />
@@ -41,7 +44,7 @@
             </Columns>
             <SelectedRowStyle BackColor="#CCCCCC" />
         </asp:GridView>
-        <asp:ObjectDataSource ID="ObjectDataSource1" runat="server" DataObjectTypeName="GiftShopServiceWeb.CoverModels.CustomCoverModel" DeleteMethod="PayCustom" InsertMethod="CreateCustom" SelectMethod="GetList" TypeName="GiftShopServiceWeb.InventoryList.MainServiceList" UpdateMethod="TakeCustom">
+        <asp:ObjectDataSource ID="ObjectDataSource1" runat="server" DataObjectTypeName="GiftShopServiceWeb.CoverModels.CustomCoverModel" DeleteMethod="PayCustom" InsertMethod="CreateCustom" SelectMethod="GetList" TypeName="GiftShopServiceWeb.InventoryDB.MainServiceBD" UpdateMethod="TakeCustom">
             <DeleteParameters>
                 <asp:Parameter Name="id" Type="Int32" />
             </DeleteParameters>

@@ -7,12 +7,13 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FStorages : System.Web.UI.Page
     {
-        private readonly IStorageService service = new StorageServiceList();
+        private readonly IStorageService service = UnityConfig.Container.Resolve<IStorageService>();
 
         List<StorageViewModel> list;
 
@@ -26,7 +27,7 @@ namespace GiftShopViewWeb
             try
             {
                 list = service.GetList();
-                dataGridView.Columns[0].Visible = false;
+                dataGridView.Columns[1].Visible = false;
             }
             catch (Exception ex)
             {

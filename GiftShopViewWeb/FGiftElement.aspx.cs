@@ -7,12 +7,13 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FGiftElement : System.Web.UI.Page
     {
-        private readonly IElementService service = new ElementServiceList();
+        private readonly IElementService service = UnityConfig.Container.Resolve<IElementService>();
 
         private GiftElementViewModel model;
 
@@ -23,11 +24,13 @@ namespace GiftShopViewWeb
                 List<ElementViewModel> list = service.GetList();
                 if (list != null)
                 {
-                    DropDownListElement.DataSource = list;
-                    DropDownListElement.DataValueField = "Id";
-                    DropDownListElement.DataTextField = "ElementName";
-                    DropDownListElement.SelectedIndex = 0;
-                    Page.DataBind();
+                    if (!Page.IsPostBack)
+                    {
+                        DropDownListElement.DataSource = list;
+                        DropDownListElement.DataValueField = "Id";
+                        DropDownListElement.DataTextField = "ElementName";
+                        Page.DataBind();
+                    }
                 }
             }
             catch (Exception ex)

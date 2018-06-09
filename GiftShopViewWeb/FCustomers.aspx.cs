@@ -4,12 +4,13 @@ using GiftShopServiceWeb.Interfaces;
 using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FCustomers : System.Web.UI.Page
     {
-        private readonly ICustomerService service = new CustomerServiceList();
+        private readonly ICustomerService service = UnityConfig.Container.Resolve<ICustomerService>();
 
         List<CustomerViewModel> list;
 

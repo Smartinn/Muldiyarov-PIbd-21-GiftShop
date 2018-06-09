@@ -1,10 +1,10 @@
 ﻿using System;
 using GiftShopServiceWeb.CoverModels;
 using GiftShopServiceWeb.Interfaces;
-using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
@@ -12,11 +12,9 @@ namespace GiftShopViewWeb
     {
         public int Id { set { id = value; } }
 
-        private readonly ICustomerService service = new CustomerServiceList();
+        private readonly ICustomerService service = UnityConfig.Container.Resolve<ICustomerService>();
 
         private int id;
-
-        private string name;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -27,21 +25,10 @@ namespace GiftShopViewWeb
                     CustomerViewModel view = service.GetElement(id);
                     if (view != null)
                     {
-                        name = view.CustomerFIO;
-                        service.UpdElement(new CustomerCoverModel
+                        if (!Page.IsPostBack)
                         {
-                            Id = id,
-                            CustomerFIO = ""
-                        });
-                        if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(TextBox1.Text))
-                        {
-                            TextBox1.Text = name;
+                            TextBox1.Text = view.CustomerFIO;
                         }
-                        service.UpdElement(new CustomerCoverModel
-                        {
-                            Id = id,
-                            CustomerFIO = name
-                        });
                     }
                 }
                 catch (Exception ex)

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
@@ -15,7 +16,7 @@ namespace GiftShopViewWeb
     {
         public int Id { set { id = value; } }
 
-        private readonly IElementService service = new ElementServiceList();
+        private readonly IElementService service = UnityConfig.Container.Resolve<IElementService>();
 
         private int id;
 
@@ -30,21 +31,10 @@ namespace GiftShopViewWeb
                     ElementViewModel view = service.GetElement(id);
                     if (view != null)
                     {
-                        name = view.ElementName;
-                        service.UpdElement(new ElementCoverModel
+                        if (!Page.IsPostBack)
                         {
-                            Id = id,
-                            ElementName = ""
-                        });
-                        if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(textBoxName.Text))
-                        {
-                            textBoxName.Text = name;
+                            textBoxName.Text = view.ElementName;
                         }
-                        service.UpdElement(new ElementCoverModel
-                        {
-                            Id = id,
-                            ElementName = name
-                        });
                     }
                 }
                 catch (Exception ex)

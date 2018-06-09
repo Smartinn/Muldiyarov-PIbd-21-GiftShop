@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using GiftShopServiceWeb.Interfaces;
-using GiftShopServiceWeb.InventoryLIst;
 using GiftShopServiceWeb.ViewModels;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Unity;
 
 namespace GiftShopViewWeb
 {
     public partial class FMain : System.Web.UI.Page
     {
-        private readonly IMainService service = new MainServiceList();
+        private readonly IMainService service = UnityConfig.Container.Resolve<IMainService>();
 
         List<CustomViewModel> list;
 
@@ -25,6 +25,9 @@ namespace GiftShopViewWeb
             {
                 list = service.GetList();
                 dataGridView1.Columns[0].Visible = false;
+                dataGridView1.Columns[2].Visible = false;
+                dataGridView1.Columns[4].Visible = false;
+                dataGridView1.Columns[6].Visible = false;
             }
             catch (Exception ex)
             {
