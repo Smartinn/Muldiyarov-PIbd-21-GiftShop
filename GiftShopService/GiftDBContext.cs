@@ -7,7 +7,7 @@ namespace GiftShopService
 {
     public class GiftDBContext : DbContext
     {
-        public GiftDBContext() : base("GiftDatabase")
+        public GiftDBContext() : base("GiftDB")
         {
             Configuration.ProxyCreationEnabled = false;
             Configuration.LazyLoadingEnabled = false;
@@ -30,10 +30,8 @@ namespace GiftShopService
 
         public virtual DbSet<StorageElement> StorageElements { get; set; }
 
-        /// <summary>
-        /// Перегружаем метод созранения изменений. Если возникла ошибка - очищаем все изменения
-        /// </summary>
-        /// <returns></returns>
+        public virtual DbSet<MessageInfo> MessageInfos { get; set; }
+
         public override int SaveChanges()
         {
             try

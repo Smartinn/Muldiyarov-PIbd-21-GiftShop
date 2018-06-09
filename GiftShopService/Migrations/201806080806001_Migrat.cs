@@ -3,7 +3,7 @@ namespace GiftShopService.Migrations
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class FirstMigration : DbMigration
+    public partial class Migrat : DbMigration
     {
         public override void Up()
         {
@@ -13,6 +13,7 @@ namespace GiftShopService.Migrations
                     {
                         Id = c.Int(nullable: false, identity: true),
                         CustomerFIO = c.String(nullable: false),
+                        Mail = c.String(),
                     })
                 .PrimaryKey(t => t.Id);
             
@@ -105,10 +106,27 @@ namespace GiftShopService.Migrations
                     })
                 .PrimaryKey(t => t.Id);
             
+            CreateTable(
+                "dbo.MessageInfoes",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        MessageId = c.String(),
+                        FromMailAddress = c.String(),
+                        Subject = c.String(),
+                        Body = c.String(),
+                        DateDelivery = c.DateTime(nullable: false),
+                        CustomerId = c.Int(),
+                    })
+                .PrimaryKey(t => t.Id)
+                .ForeignKey("dbo.Customers", t => t.CustomerId)
+                .Index(t => t.CustomerId);
+            
         }
         
         public override void Down()
         {
+            DropForeignKey("dbo.MessageInfoes", "CustomerId", "dbo.Customers");
             DropForeignKey("dbo.GiftElements", "GiftId", "dbo.Gifts");
             DropForeignKey("dbo.StorageElements", "StorageId", "dbo.Storages");
             DropForeignKey("dbo.StorageElements", "ElementId", "dbo.Elements");
@@ -116,6 +134,7 @@ namespace GiftShopService.Migrations
             DropForeignKey("dbo.Customs", "GiftId", "dbo.Gifts");
             DropForeignKey("dbo.Customs", "FacilitatorId", "dbo.Facilitators");
             DropForeignKey("dbo.Customs", "CustomerId", "dbo.Customers");
+            DropIndex("dbo.MessageInfoes", new[] { "CustomerId" });
             DropIndex("dbo.StorageElements", new[] { "ElementId" });
             DropIndex("dbo.StorageElements", new[] { "StorageId" });
             DropIndex("dbo.GiftElements", new[] { "ElementId" });
@@ -123,6 +142,7 @@ namespace GiftShopService.Migrations
             DropIndex("dbo.Customs", new[] { "FacilitatorId" });
             DropIndex("dbo.Customs", new[] { "GiftId" });
             DropIndex("dbo.Customs", new[] { "CustomerId" });
+            DropTable("dbo.MessageInfoes");
             DropTable("dbo.Storages");
             DropTable("dbo.StorageElements");
             DropTable("dbo.Elements");

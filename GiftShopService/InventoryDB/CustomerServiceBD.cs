@@ -24,7 +24,8 @@ namespace GiftShopService.InventoryDB
                 .Select(rec => new CustomerViewModel
                 {
                     Id = rec.Id,
-                    CustomerFIO = rec.CustomerFIO
+                    Mail = rec.Mail,
+                    CustomerFIO = rec.CustomerFIO                   
                 })
                 .ToList();
             return result;
@@ -38,7 +39,18 @@ namespace GiftShopService.InventoryDB
                 return new CustomerViewModel
                 {
                     Id = element.Id,
-                    CustomerFIO = element.CustomerFIO
+                    Mail = element.Mail,
+                    CustomerFIO = element.CustomerFIO,              
+                    Messages = context.MessageInfos
+                            .Where(recM => recM.CustomerId == element.Id)
+                            .Select(recM => new MessageInfoViewModel
+                            {
+                        MessageId = recM.MessageId,
+                        DateDelivery = recM.DateDelivery,
+                        Subject = recM.Subject,
+                        Body = recM.Body
+                            })
+                            .ToList()
                 };
             }
             throw new Exception("Элемент не найден");
@@ -53,7 +65,8 @@ namespace GiftShopService.InventoryDB
             }
             context.Customers.Add(new Customer
             {
-                CustomerFIO = model.CustomerFIO
+                CustomerFIO = model.CustomerFIO,
+                Mail = model.Mail         
             });
             context.SaveChanges();
         }
@@ -71,7 +84,8 @@ namespace GiftShopService.InventoryDB
             {
                 throw new Exception("Элемент не найден");
             }
-            element.CustomerFIO = model.CustomerFIO;
+            element.Mail = model.Mail;
+            element.CustomerFIO = model.CustomerFIO;          
             context.SaveChanges();
         }
 

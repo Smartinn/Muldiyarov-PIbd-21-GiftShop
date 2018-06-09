@@ -10,6 +10,7 @@ namespace GiftShopModel
         
         [Required]
         public string CustomerFIO { get; set; }
+        public string Mail { get; set; }
 
         [ForeignKey("CustomerId")]
         public virtual List<Custom> Customs { get; set; }
