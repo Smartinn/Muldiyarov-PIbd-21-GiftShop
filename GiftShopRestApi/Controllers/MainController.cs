@@ -1,4 +1,5 @@
-﻿using GiftShopService.CoverModels;
+﻿using GiftShopRestApi.Services;
+using GiftShopService.CoverModels;
 using GiftShopService.Interfaces;
 using System;
 using System.Web.Http;
@@ -18,6 +19,18 @@ namespace GiftShopRestApi.Controllers
         public IHttpActionResult GetList()
         {
             var list = _service.GetList();
+            if (list == null)
+            {
+                InternalServerError(new Exception("Нет данных"));
+            }
+            return Ok(list);
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetInfo()
+        {
+            ReflectionService service = new ReflectionService();
+            var list = service.GetInfoByAssembly();
             if (list == null)
             {
                 InternalServerError(new Exception("Нет данных"));

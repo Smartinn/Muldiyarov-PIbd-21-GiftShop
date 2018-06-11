@@ -112,6 +112,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributies\CustomInterfaceAttribute.cs" />
+    <Compile Include="Attributies\CustomMethodAttribute.cs" />
     <Compile Include="CoverModels\CustomCoverModel.cs" />
     <Compile Include="CoverModels\CustomerCoverModel.cs" />
     <Compile Include="CoverModels\CustomStatusCoverModel.cs" />
