@@ -1,0 +1,11 @@
+C:\Users\Werk\Source\Repos\WebApplication1\GiftShopWeb\bin\Debug\GiftShopWeb.dll
+C:\Users\Werk\Source\Repos\WebApplication1\GiftShopWeb\bin\Debug\GiftShopWeb.pdb
+C:\Users\Werk\Source\Repos\WebApplication1\GiftShopWeb\obj\Debug\GiftShopWeb.csproj.CoreCompileInputs.cache
+C:\Users\Werk\Source\Repos\WebApplication1\GiftShopWeb\obj\Debug\GiftShopWeb.dll
+C:\Users\Werk\Source\Repos\WebApplication1\GiftShopWeb\obj\Debug\GiftShopWeb.pdb
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\bin\Debug\GiftShopWeb.dll
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\bin\Debug\GiftShopWeb.pdb
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\obj\Debug\GiftShopWeb.csprojResolveAssemblyReference.cache
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\obj\Debug\GiftShopWeb.csproj.CoreCompileInputs.cache
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\obj\Debug\GiftShopWeb.dll
+C:\Users\Werk\Source\Repos\WebApplication2\GiftShopWeb\obj\Debug\GiftShopWeb.pdb
